@@ -1,72 +1,117 @@
 # Aepsy React FE Take-home
 
-## Project Overview
-This repository contains a monorepo implementation of the Aepsy Frontend take-home assignment with a 3-step flow:
-1. Record or upload voice note
-2. Generate and select topic suggestions
-3. Search and paginate psychologists from GraphQL
+A monorepo implementation of Aepsy's React FE assignment, focused on:
+1. Stable voice capture flow
+2. Topic suggestion and selection
+3. Ranked psychologist search with pagination
+
+## Demo Flow
+1. Record or upload an audio file
+2. Analyze audio with provided `useAudioTranscriber` helper
+3. Select one or more topics
+4. Fetch psychologists from GraphQL and load more
+5. Refresh or navigate back/forward without losing progress
 
 ## Tech Stack
-- `pnpm` workspaces + `turbo`
-- Next.js (App Router) + React + TypeScript
-- Zustand (state + localStorage persistence)
-- TanStack Query + graphql-request
-- MUI (shared UI package)
-- i18next (en + de-CH, JSON files in `public/locales`)
-- ESLint + Prettier
-- Vitest (unit)
-- Playwright (e2e)
+- Monorepo: `pnpm` workspaces + `turbo`
+- App: Next.js (App Router) + React + TypeScript
+- UI: MUI + shared UI kit in `packages/ui`
+- State: Zustand (sliced store)
+- Data fetching: TanStack Query + `graphql-request`
+- Forms: React Hook Form (+ UI form layer in `packages/ui`)
+- i18n: i18next (`en`, `de-CH`), translation JSON in `apps/web/public/locales`
+- Quality: ESLint + Prettier + TypeScript strict mode
+- Tests: Vitest (unit) + Playwright (e2e + visual)
 
-## Monorepo Structure
-- `apps/web`: main web app
-- `packages/ui`: shared UI components, theme, form kit, toast/layout providers
-- `packages/localization`: i18n setup
+## Repository Structure
+- `apps/web`: Next.js web application
+- `packages/ui`: shared UI components, form controls, layout primitives, theme/provider
+- `packages/localization`: localization setup and hooks
 - `packages/api-client`: GraphQL client wrapper
-- `packages/config-eslint`: shared ESLint configs
+- `packages/config-eslint`: shared ESLint config
 - `packages/config-typescript`: shared TS configs
-- `docs`: architecture notes and ADRs
+- `docs`: architecture notes and ADR
 
-## Approach and Key Decisions
-- Separated domain flow into 3 UI steps and persisted progress in Zustand so users can refresh or navigate without losing state.
-- Built recording logic as a state machine (`useAudioRecorderMachine`) to isolate side effects from UI.
-- Added upload-audio fallback for users who already have recorded files.
-- Used provided `useAudioTranscriber` helper as required to simulate audio analysis in Step 2.
-- Implemented Step 3 with provided `SEARCH_PROVIDERS` GraphQL query and TanStack Query infinite pagination (`Load More`).
-- Centralized reusable primitives in `packages/ui` (form controls, modal/dialog, toast, loading/empty state, app shell).
-- Added route-step guards to prevent invalid navigation states (e.g. Step 2 without audio, Step 3 without topics).
-- Added production-oriented polish: draft resume banner, offline banner, and lightweight client-side analytics events.
-- Improved UX with clearer step completion, skeleton loading states, and mobile sticky action buttons.
-- Added dev-only analytics dashboard to inspect local event stream and clear events quickly.
-- Standardized user-facing app copy through i18n keys (`public/locales/en|de-CH`) for consistent localization.
-- Refactored web app to feature-first structure with explicit `shared` boundaries and psychologist API DTO/mappers.
-- Added environment schema validation (`zod`) for public runtime config.
-- Split Zustand store into dedicated slices (`navigation`, `topics`, `audio`, `meta`) for maintainability.
+## Architecture and Key Decisions
+- Feature-first app structure in `apps/web/src/features/*` and shared cross-cutting modules in `apps/web/src/shared/*`.
+- Recorder logic isolated from UI using a small state machine hook: `useAudioRecorderMachine`.
+- Audio persistence optimized for reliability/performance:
+  - Metadata persisted in Zustand + localStorage
+  - Audio blob persisted in IndexedDB (`audioStorageKey`)
+  - Preview URL hydrated on app load
+- Step guard logic prevents invalid transitions:
+  - No Step 2 without audio
+  - No Step 3 without at least one topic
+- Step 2 uses provided helper (`useAudioTranscriber`) as required.
+- Step 3 uses GraphQL query contract and `useInfiniteQuery` for `Load More` pagination.
+- Query reliability polish:
+  - Timeout wrapper
+  - Abort-aware behavior
+  - Retry + exponential backoff
+- UX polish:
+  - Sticky CTA on mobile
+  - Draft restore banner
+  - Offline banner
+  - Loading/empty states and visual snapshots
+- All user-facing copy is i18n-key based (no hardcoded text in UI flow).
+
+## Requirement Fit Checklist
+- Step 1 recording: start/stop/playback/re-record/upload ✅
+- Handles permission denied and interruptions without crash ✅
+- Clear separation of UI and recording side effects ✅
+- Step 2 topic suggestions via provided transcriber helper ✅
+- Multi-select / deselect topics ✅
+- Step 3 GraphQL search with ranking and pagination (`Load More`) ✅
+- Navigate between steps without losing progress ✅
+- Refresh page without losing progress ✅
+- Responsive desktop/mobile experience ✅
+
+## Environment Variables
+Create `apps/web/.env.local`:
+
+```bash
+NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT=https://api-dev.aepsy.com/graphql
+```
+
+## Run Locally
+```bash
+pnpm install
+pnpm dev
+```
+
+## Quality Checks
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:e2e
+pnpm test:visual
+```
+
+## Build and Analyze
+```bash
+pnpm build
+pnpm analyze
+```
+
+## Deploy (Vercel)
+1. Import repo to Vercel
+2. Set root directory to `apps/web`
+3. Add env var `NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT`
+4. Deploy
 
 ## Trade-offs and Assumptions
-- Audio content is persisted as `data URL` in localStorage to satisfy refresh persistence quickly; this is simple but not optimal for large files.
-- Step 3 assumes endpoint `https://api-dev.aepsy.com/graphql` unless `NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT` is provided.
-- Current provider rendering is intentionally concise and based on available fields from the sample query.
-- Authentication and production-grade API error mapping were not added because assignment materials focus on frontend flow.
+- GraphQL endpoint is public and does not require auth for this assignment flow.
+- Provider card rendering prioritizes clarity over heavy UI complexity.
+- Recorder is browser API based; very old browsers may hit `unsupported` path.
 
 ## What I Would Improve With More Time
-- Move audio persistence from localStorage to IndexedDB for larger recordings and better storage limits.
-- Add stricter runtime validation for GraphQL responses (e.g., zod schemas).
-- Expand test coverage: recorder interruptions/permissions, language switching, and richer e2e edge cases.
-- Add accessibility pass (keyboard/focus flow, ARIA audit) and visual regression snapshots.
-- Add query retry/backoff and user-friendly API error states.
+- Add stronger runtime validation for GraphQL response payloads.
+- Add richer recorder tests (permission denial, interrupted recording, rehydration edge cases).
+- Add accessibility audit pass (focus order, keyboard interactions, ARIA labels).
+- Add optional server proxy/BFF for stricter network control and observability.
 
-## Scripts
-- `pnpm install`
-- `pnpm dev`
-- `pnpm build`
-- `pnpm lint`
-- `pnpm typecheck`
-- `pnpm test`
-- `pnpm test:e2e`
-- `pnpm test:visual:update` (generate/update visual snapshots)
-- `pnpm test:visual` (run visual regression snapshots)
-
-## CI Workflows
-- `.github/workflows/ci.yml`: lint, typecheck, unit tests, build, e2e
-- `.github/workflows/visual.yml`: manual visual regression run (`workflow_dispatch`)
-- `.github/workflows/security.yml`: dependency review + scheduled `pnpm audit`
+## CI
+- `.github/workflows/ci.yml`: lint, typecheck, tests, build, e2e
+- `.github/workflows/visual.yml`: manual visual regression
+- `.github/workflows/security.yml`: dependency review + scheduled audit

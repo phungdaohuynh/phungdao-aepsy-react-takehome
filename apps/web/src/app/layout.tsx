@@ -6,8 +6,17 @@ import { ClientLayoutShell } from '@/layout/components/client-layout-shell';
 import { AppProviders } from '@/shared/providers/app-providers';
 
 export const metadata: Metadata = {
-  title: 'Aepsy FE Take-home',
-  description: 'Monorepo scaffold for Aepsy React FE take-home assignment.'
+  title: {
+    default: 'Aepsy Take-Home',
+    template: '%s | Aepsy Take-Home'
+  },
+  description:
+    'Record a voice note, pick suggested topics, and discover matching psychologists in a simple 3-step flow.',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg'
+  }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
