@@ -12,7 +12,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm dev',
     port: 3000,
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     cwd: '.'
   },
   projects: [

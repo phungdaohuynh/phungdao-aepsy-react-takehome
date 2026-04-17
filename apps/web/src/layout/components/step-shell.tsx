@@ -7,21 +7,30 @@ import { Alert, Container, Stack, Typography, UIStepProgress, UILoadingState } f
 
 import { ASSIGNMENT_STEPS } from '@/shared/constants/steps';
 import { useAppStore } from '@/shared/state/store';
-import { AnalyticsDevDashboard } from './analytics-dev-dashboard';
-import { NetworkStatusBanner } from './network-status-banner';
-import { ResumeDraftBanner } from './resume-draft-banner';
+import { AnalyticsDevDashboard } from '@/layout/components/analytics-dev-dashboard';
+import { NetworkStatusBanner } from '@/layout/components/network-status-banner';
+import { ResumeDraftBanner } from '@/layout/components/resume-draft-banner';
 
 const StepRecordingLazy = dynamic(
-  () => import('@/features/recording/components/step-recording').then((module) => ({ default: module.StepRecording })),
-  { loading: () => <UILoadingState /> }
+  () =>
+    import('@/features/recording/components/step-recording').then((module) => ({
+      default: module.StepRecording,
+    })),
+  { loading: () => <UILoadingState /> },
 );
 const StepTopicsLazy = dynamic(
-  () => import('@/features/topics/components/step-topics').then((module) => ({ default: module.StepTopics })),
-  { loading: () => <UILoadingState /> }
+  () =>
+    import('@/features/topics/components/step-topics').then((module) => ({
+      default: module.StepTopics,
+    })),
+  { loading: () => <UILoadingState /> },
 );
 const StepPsychologistsLazy = dynamic(
-  () => import('@/features/psychologists/components/step-psychologists').then((module) => ({ default: module.StepPsychologists })),
-  { loading: () => <UILoadingState /> }
+  () =>
+    import('@/features/psychologists/components/step-psychologists').then((module) => ({
+      default: module.StepPsychologists,
+    })),
+  { loading: () => <UILoadingState /> },
 );
 
 export function StepShell() {
@@ -29,32 +38,34 @@ export function StepShell() {
   const isClientReady = useSyncExternalStore(
     () => () => undefined,
     () => true,
-    () => false
+    () => false,
   );
   const step = useAppStore((state) => state.step);
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
+  const audioStorageKey = useAppStore((state) => state.audioStorageKey);
   const selectedTopicsCount = useAppStore((state) => state.selectedTopics.length);
   const setStep = useAppStore((state) => state.setStep);
+  const hasAudio = Boolean(audioDataUrl || audioStorageKey);
 
   const activeStep = ASSIGNMENT_STEPS.findIndex((item) => item.key === step);
   const completedMap = useMemo(
     () => ({
-      record: Boolean(audioDataUrl),
-      topics: selectedTopicsCount > 0
+      record: hasAudio,
+      topics: selectedTopicsCount > 0,
     }),
-    [audioDataUrl, selectedTopicsCount]
+    [hasAudio, selectedTopicsCount],
   );
 
   useEffect(() => {
-    if (step === 'topics' && !audioDataUrl) {
+    if (step === 'topics' && !hasAudio) {
       setStep('record');
       return;
     }
 
     if (step === 'psychologists' && selectedTopicsCount === 0) {
-      setStep(audioDataUrl ? 'topics' : 'record');
+      setStep(hasAudio ? 'topics' : 'record');
     }
-  }, [audioDataUrl, selectedTopicsCount, setStep, step]);
+  }, [hasAudio, selectedTopicsCount, setStep, step]);
 
   if (!isClientReady) {
     return (
@@ -78,7 +89,7 @@ export function StepShell() {
           steps={ASSIGNMENT_STEPS.map((item) => ({
             key: item.key,
             label: t(`steps.${item.key}`),
-            completed: completedMap[item.key as 'record' | 'topics']
+            completed: completedMap[item.key as 'record' | 'topics'],
           }))}
           activeStep={activeStep}
         />

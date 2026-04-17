@@ -17,11 +17,27 @@ import {
 
 import { useAudioTranscriber } from '@/features/topics/hooks/use-audio-transcriber';
 import { trackEvent } from '@/shared/lib/analytics';
+import { getAudioBlob } from '@/shared/lib/audio-storage';
 import { useAppStore } from '@/shared/state/store';
 
 async function audioDataUrlToArrayBuffer(audioDataUrl: string) {
   const response = await fetch(audioDataUrl);
   return await response.arrayBuffer();
+}
+
+async function resolveAudioArrayBuffer(audioDataUrl: string | null, audioStorageKey: string | null) {
+  if (audioStorageKey) {
+    const blob = await getAudioBlob(audioStorageKey);
+    if (blob) {
+      return await blob.arrayBuffer();
+    }
+  }
+
+  if (audioDataUrl) {
+    return await audioDataUrlToArrayBuffer(audioDataUrl);
+  }
+
+  throw new Error('No audio data available.');
 }
 
 export function StepTopics() {
@@ -30,6 +46,7 @@ export function StepTopics() {
   const hasAutoProcessedRef = useRef(false);
 
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
+  const audioStorageKey = useAppStore((state) => state.audioStorageKey);
   const selectedTopics = useAppStore((state) => state.selectedTopics);
   const toggleTopic = useAppStore((state) => state.toggleTopic);
   const setStep = useAppStore((state) => state.setStep);
@@ -37,29 +54,29 @@ export function StepTopics() {
   const transcriber = useAudioTranscriber();
 
   const onAnalyzeAudio = useCallback(async () => {
-    if (!audioDataUrl) {
+    if (!audioDataUrl && !audioStorageKey) {
       toast.showError(t('topics.toast.noAudio'));
       return;
     }
 
     try {
       trackEvent('topics_analyze_started');
-      const audioBuffer = await audioDataUrlToArrayBuffer(audioDataUrl);
+      const audioBuffer = await resolveAudioArrayBuffer(audioDataUrl, audioStorageKey);
       await transcriber.processAudio(audioBuffer);
       trackEvent('topics_analyze_success');
     } catch {
       toast.showError(t('topics.toast.analyzeFailed'));
     }
-  }, [audioDataUrl, t, toast, transcriber]);
+  }, [audioDataUrl, audioStorageKey, t, toast, transcriber]);
 
   useEffect(() => {
-    if (!audioDataUrl || hasAutoProcessedRef.current || transcriber.data || transcriber.isLoading) {
+    if ((!audioDataUrl && !audioStorageKey) || hasAutoProcessedRef.current || transcriber.data || transcriber.isLoading) {
       return;
     }
 
     hasAutoProcessedRef.current = true;
     void onAnalyzeAudio();
-  }, [audioDataUrl, onAnalyzeAudio, transcriber.data, transcriber.isLoading]);
+  }, [audioDataUrl, audioStorageKey, onAnalyzeAudio, transcriber.data, transcriber.isLoading]);
 
   const selectedCount = selectedTopics.length;
 
@@ -76,7 +93,7 @@ export function StepTopics() {
           {t('topics.description')} <code>useAudioTranscriber</code>.
         </Typography>
 
-        {!audioDataUrl ? (
+        {!audioDataUrl && !audioStorageKey ? (
           <Alert
             severity="warning"
             action={
@@ -92,7 +109,7 @@ export function StepTopics() {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} useFlexGap>
           <UIButton
             onClick={() => void onAnalyzeAudio()}
-            disabled={!audioDataUrl || transcriber.isLoading}
+            disabled={(!audioDataUrl && !audioStorageKey) || transcriber.isLoading}
             data-testid="topics-analyze-button"
           >
             {t('topics.actions.analyze')}

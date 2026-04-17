@@ -5,7 +5,14 @@ export function createQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 30_000,
-        retry: 1
+        retry: (failureCount, error) => {
+          if (error instanceof Error && error.name === 'AbortError') {
+            return false;
+          }
+          return failureCount < 2;
+        },
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+        refetchOnWindowFocus: false
       }
     }
   });

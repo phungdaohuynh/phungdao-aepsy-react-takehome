@@ -3,6 +3,7 @@ export type AudioSourceType = 'recorded' | 'uploaded';
 
 export type AudioPayload = {
   audioDataUrl: string;
+  audioStorageKey: string;
   audioMimeType: string;
   audioFileName: string;
   audioSourceType: AudioSourceType;
@@ -21,10 +22,12 @@ export type TopicsSlice = {
 
 export type AudioSlice = {
   audioDataUrl: string | null;
+  audioStorageKey: string | null;
   audioMimeType: string | null;
   audioFileName: string | null;
   audioSourceType: AudioSourceType | null;
   setAudioPayload: (payload: AudioPayload) => void;
+  setAudioDataUrl: (audioDataUrl: string | null) => void;
   clearAudioPayload: () => void;
 };
 

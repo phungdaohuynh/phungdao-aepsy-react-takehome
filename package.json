@@ -4,9 +4,10 @@
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
+    "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
+    "analyze": "pnpm --filter @workspace/web analyze",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
     "test:visual": "pnpm --filter @workspace/web test:visual",

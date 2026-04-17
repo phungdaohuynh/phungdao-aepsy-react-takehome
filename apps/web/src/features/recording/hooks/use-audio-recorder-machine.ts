@@ -64,31 +64,15 @@ function reducer(state: RecorderState, event: RecorderEvent): RecorderState {
   }
 }
 
-async function blobToDataUrl(blob: Blob) {
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result;
-      if (typeof result === 'string') {
-        resolve(result);
-        return;
-      }
-      reject(new Error('Cannot read audio data.'));
-    };
-    reader.onerror = () => reject(new Error('Cannot read audio data.'));
-    reader.readAsDataURL(blob);
-  });
-}
-
 export type RecorderOutput = {
-  audioDataUrl: string;
+  audioBlob: Blob;
   audioMimeType: string;
   audioFileName: string;
   sourceType: 'recorded' | 'uploaded';
 };
 
 type UseAudioRecorderMachineParams = {
-  onAudioReady: (payload: RecorderOutput) => void;
+  onAudioReady: (payload: RecorderOutput) => Promise<void> | void;
   onError?: (message: string) => void;
 };
 
@@ -159,10 +143,8 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
             return;
           }
 
-          const audioDataUrl = await blobToDataUrl(blob);
-
-          onAudioReady({
-            audioDataUrl,
+          await onAudioReady({
+            audioBlob: blob,
             audioMimeType: mimeType,
             audioFileName: `voice-note-${Date.now()}.webm`,
             sourceType: 'recorded'
@@ -205,10 +187,8 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
   const handleAudioUpload = useCallback(
     async (file: File) => {
       try {
-        const audioDataUrl = await blobToDataUrl(file);
-
-        onAudioReady({
-          audioDataUrl,
+        await onAudioReady({
+          audioBlob: file,
           audioMimeType: file.type || 'audio/mpeg',
           audioFileName: file.name,
           sourceType: 'uploaded'

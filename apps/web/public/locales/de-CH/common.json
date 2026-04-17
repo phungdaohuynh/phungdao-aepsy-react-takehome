@@ -42,6 +42,7 @@
     "description": "Der Recorder behandelt verweigerte Berechtigungen, Tab-Unterbrechungen und erneute Aufnahmen stabil.",
     "interrupted": "Die Aufnahme wurde unterbrochen. Bitte prüfe sie und nimm bei Bedarf erneut auf.",
     "noAudio": "Noch kein Audio. Nimm auf oder lade eine Datei hoch, um fortzufahren.",
+    "restoringPreview": "Gespeicherte Audio-Vorschau wird wiederhergestellt...",
     "sourcePrefix": "Quelle:",
     "liveStatus": "Recorder-Status:",
     "status": {

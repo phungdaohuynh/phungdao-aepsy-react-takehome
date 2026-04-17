@@ -1,11 +1,9 @@
 {
   "extends": "@workspace/tsconfig/nextjs.json",
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@locales/*": ["public/locales/*"]
+      "@/*": ["./src/*"],
+      "@locales/*": ["./public/locales/*"]
     }
   },
   "include": [

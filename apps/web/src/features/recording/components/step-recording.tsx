@@ -16,6 +16,7 @@ import {
 
 import { useAudioRecorderMachine } from '@/features/recording/hooks/use-audio-recorder-machine';
 import { trackEvent } from '@/shared/lib/analytics';
+import { deleteAudioBlob, saveAudioBlob } from '@/shared/lib/audio-storage';
 import { useAppStore } from '@/shared/state/store';
 
 function statusLabel(status: string, t: (key: string) => string) {
@@ -55,6 +56,7 @@ export function StepRecording() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
+  const audioStorageKey = useAppStore((state) => state.audioStorageKey);
   const audioFileName = useAppStore((state) => state.audioFileName);
   const audioSourceType = useAppStore((state) => state.audioSourceType);
   const setAudioPayload = useAppStore((state) => state.setAudioPayload);
@@ -62,12 +64,25 @@ export function StepRecording() {
   const clearSelectedTopics = useAppStore((state) => state.clearSelectedTopics);
   const setStep = useAppStore((state) => state.setStep);
   const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+  const hasAudio = Boolean(audioDataUrl || audioStorageKey);
 
   const recorder = useAudioRecorderMachine({
-    onAudioReady: ({ audioDataUrl: nextAudioDataUrl, audioFileName: nextAudioFileName, audioMimeType, sourceType }) => {
+    onAudioReady: async ({ audioBlob, audioFileName: nextAudioFileName, audioMimeType, sourceType }) => {
+      if (audioStorageKey) {
+        await deleteAudioBlob(audioStorageKey);
+      }
+
+      if (audioDataUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(audioDataUrl);
+      }
+
+      const nextAudioStorageKey = await saveAudioBlob(audioBlob);
+      const nextAudioDataUrl = URL.createObjectURL(audioBlob);
+
       clearSelectedTopics();
       setAudioPayload({
         audioDataUrl: nextAudioDataUrl,
+        audioStorageKey: nextAudioStorageKey,
         audioMimeType,
         audioFileName: nextAudioFileName,
         audioSourceType: sourceType
@@ -75,7 +90,7 @@ export function StepRecording() {
 
       if (sourceType === 'uploaded') {
         toast.showSuccess(t('recording.toast.uploadedSuccess'));
-        trackEvent('audio_uploaded', { mimeType: audioMimeType, sizeKb: Math.round(nextAudioDataUrl.length / 1024) });
+        trackEvent('audio_uploaded', { mimeType: audioMimeType, sizeKb: Math.round(audioBlob.size / 1024) });
       } else {
         toast.showSuccess(t('recording.toast.recordedSuccess'));
         trackEvent('record_stopped', { mimeType: audioMimeType });
@@ -115,17 +130,37 @@ export function StepRecording() {
     event.target.value = '';
   };
 
-  const onReRecord = () => {
+  const onReRecord = async () => {
+    if (audioStorageKey) {
+      await deleteAudioBlob(audioStorageKey);
+    }
+
+    if (audioDataUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(audioDataUrl);
+    }
+
     recorder.resetMachine();
     clearAudioPayload();
     clearSelectedTopics();
     toast.showInfo(t('recording.toast.cleared'));
   };
 
-  const onUseDemoAudio = () => {
+  const onUseDemoAudio = async () => {
+    if (audioStorageKey) {
+      await deleteAudioBlob(audioStorageKey);
+    }
+
+    if (audioDataUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(audioDataUrl);
+    }
+
+    const demoBlob = new Blob(['demo-audio'], { type: 'audio/webm' });
+    const nextAudioStorageKey = await saveAudioBlob(demoBlob);
+
     clearSelectedTopics();
     setAudioPayload({
-      audioDataUrl: 'data:audio/webm;base64,ZmFrZS1hdWRpby1kYXRh',
+      audioDataUrl: URL.createObjectURL(demoBlob),
+      audioStorageKey: nextAudioStorageKey,
       audioMimeType: 'audio/webm',
       audioFileName: 'demo-audio.webm',
       audioSourceType: 'uploaded'
@@ -171,8 +206,10 @@ export function StepRecording() {
           </UIButton>
           <UIButton
             variant="text"
-            onClick={onReRecord}
-            disabled={!audioDataUrl}
+            onClick={() => {
+              void onReRecord();
+            }}
+            disabled={!hasAudio}
             data-testid="record-rerecord-button"
           >
             {t('recording.actions.rerecord')}
@@ -183,7 +220,9 @@ export function StepRecording() {
           {process.env.NODE_ENV !== 'production' ? (
             <UIButton
               variant="text"
-              onClick={onUseDemoAudio}
+              onClick={() => {
+                void onUseDemoAudio();
+              }}
               data-testid="record-use-demo-audio-button"
             >
               {t('recording.actions.demo')}
@@ -201,12 +240,16 @@ export function StepRecording() {
           />
         </Stack>
 
-        {audioDataUrl ? (
+        {hasAudio ? (
           <Box>
             <Typography variant="body2" sx={{ mb: 1 }}>
               {t('recording.sourcePrefix')} {audioSourceType} {audioFileName ? `• ${audioFileName}` : ''}
             </Typography>
-            <audio controls src={audioDataUrl} style={{ width: '100%' }} data-testid="record-audio-player" />
+            {audioDataUrl ? (
+              <audio controls src={audioDataUrl} style={{ width: '100%' }} data-testid="record-audio-player" />
+            ) : (
+              <Alert severity="info">{t('recording.restoringPreview')}</Alert>
+            )}
           </Box>
         ) : (
           <Alert severity="info">{t('recording.noAudio')}</Alert>
@@ -222,7 +265,7 @@ export function StepRecording() {
           }}
         >
           <UIButton
-            disabled={!audioDataUrl}
+            disabled={!hasAudio}
             onClick={() => setStep('topics')}
             data-testid="record-continue-button"
           >

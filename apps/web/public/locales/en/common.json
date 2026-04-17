@@ -42,6 +42,7 @@
     "description": "The recorder handles permission denial, tab interruption, and re-record flows to keep state stable.",
     "interrupted": "Recording was interrupted. Please review and record again if needed.",
     "noAudio": "No audio yet. Record or upload a file to continue.",
+    "restoringPreview": "Restoring your saved audio preview...",
     "sourcePrefix": "Source:",
     "liveStatus": "Recorder status:",
     "status": {

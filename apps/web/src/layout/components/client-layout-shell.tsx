@@ -5,7 +5,7 @@ import { useTranslation } from '@workspace/localization';
 import { useEffect, type PropsWithChildren } from 'react';
 import { UIAppShell, UISiteFooter, UISiteHeader } from '@workspace/ui';
 
-import { LanguageSwitcher } from './language-switcher';
+import { LanguageSwitcher } from '@/layout/components/language-switcher';
 
 type ClientLayoutShellProps = PropsWithChildren<{
   year: number;

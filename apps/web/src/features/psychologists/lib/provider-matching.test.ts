@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ProviderItem } from '@/features/psychologists/api/use-psychologists-query';
-import { getProviderMatchReasons } from './provider-matching';
+import { getProviderMatchReasons } from '@/features/psychologists/lib/provider-matching';
 
 const baseProvider: ProviderItem = {
   userInfo: { firebaseUid: 'provider-1', avatar: null },

@@ -1,4 +1,8 @@
-import type { SearchProvidersNodeDto, SearchProvidersPage, SearchProvidersResponseDto } from './dto';
+import type {
+  SearchProvidersNodeDto,
+  SearchProvidersPage,
+  SearchProvidersResponseDto
+} from '@/features/psychologists/api/dto';
 
 export function normalizeSearchProvidersNode(response: SearchProvidersResponseDto): SearchProvidersNodeDto | null {
   const node = response.searchProviders;

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from '@workspace/localization';
 import { Alert, UIButton } from '@workspace/ui';
 
+import { deleteAudioBlob } from '@/shared/lib/audio-storage';
 import { useAppStore } from '@/shared/state/store';
 
 function formatLastSaved(value: number | null) {
@@ -28,11 +29,13 @@ export function ResumeDraftBanner() {
   const hasHydrated = useAppStore((state) => state.hasHydrated);
   const step = useAppStore((state) => state.step);
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
+  const audioStorageKey = useAppStore((state) => state.audioStorageKey);
   const selectedTopicsCount = useAppStore((state) => state.selectedTopics.length);
   const lastUpdatedAt = useAppStore((state) => state.lastUpdatedAt);
   const reset = useAppStore((state) => state.reset);
 
-  const shouldShow = hasHydrated && (step !== 'record' || Boolean(audioDataUrl) || selectedTopicsCount > 0);
+  const shouldShow =
+    hasHydrated && (step !== 'record' || Boolean(audioDataUrl || audioStorageKey) || selectedTopicsCount > 0);
 
   const label = useMemo(() => formatLastSaved(lastUpdatedAt), [lastUpdatedAt]);
 
@@ -49,6 +52,14 @@ export function ResumeDraftBanner() {
           size="small"
           variant="text"
           onClick={() => {
+            if (audioStorageKey) {
+              void deleteAudioBlob(audioStorageKey);
+            }
+
+            if (audioDataUrl?.startsWith('blob:')) {
+              URL.revokeObjectURL(audioDataUrl);
+            }
+
             reset();
             setDismissed(true);
           }}
