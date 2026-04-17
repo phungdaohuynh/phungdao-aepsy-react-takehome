@@ -1,5 +1,5 @@
 {
-  "appTitle": "Aepsy take-home assignment",
+  "appTitle": "Aepsy assignment",
   "heroTitle": "Find the right psychologist in 3 simple steps",
   "footer": "© {{year}} Aepsy take-home",
   "common": {
@@ -8,6 +8,12 @@
     "tryAgain": "Try again",
     "loadMore": "Load More",
     "loadingMore": "Loading more..."
+  },
+  "summary": {
+    "audioReady": "Audio ready",
+    "audioMissing": "Audio missing",
+    "topicsSelected": "Topics: {{count}}",
+    "currentStep": "Step: {{step}}"
   },
   "language": {
     "label": "Language",
@@ -40,11 +46,25 @@
     "title": "Step 1 - Voice Note",
     "subheader": "Record a voice note or upload an existing audio file",
     "description": "The recorder handles permission denial, tab interruption, and re-record flows to keep state stable.",
+    "uploadPolicy": "Small files are handled instantly up to {{smallMb}} MB. Larger files run local worker processing up to {{largeMb}} MB.",
     "interrupted": "Recording was interrupted. Please review and record again if needed.",
     "noAudio": "No audio yet. Record or upload a file to continue.",
     "restoringPreview": "Restoring your saved audio preview...",
     "sourcePrefix": "Source:",
     "liveStatus": "Recorder status:",
+    "guidedPromptLabel": "Suggested opening prompt",
+    "consent": {
+      "title": "Before recording, confirm you agree to process this audio for topic suggestions.",
+      "enable": "Enable consent",
+      "enabled": "Consent enabled",
+      "note": "You can delete the audio at any time.",
+      "privacyLink": "Privacy policy"
+    },
+    "prompts": {
+      "prompt1": "What has felt most overwhelming for you this week?",
+      "prompt2": "Describe a recent situation where stress felt hard to manage.",
+      "prompt3": "What kind of support are you hoping to get from therapy?"
+    },
     "status": {
       "recording": "Recording",
       "requestingPermission": "Requesting Permission",
@@ -59,15 +79,44 @@
       "rerecord": "Re-record",
       "upload": "Upload Audio",
       "demo": "Use Demo Audio",
-      "continue": "Continue to Topic Suggestions"
+      "continue": "Continue to Topic Suggestions",
+      "prevPrompt": "Previous prompt",
+      "nextPrompt": "Next prompt",
+      "deleteAudioNow": "Delete my audio now",
+      "pauseUpload": "Pause upload",
+      "resumeUpload": "Resume upload",
+      "cancelUpload": "Cancel upload"
+    },
+    "longUpload": {
+      "status": "Large file processing {{status}} ({{progress}}%)"
+    },
+    "tooltips": {
+      "consentRequired": "Enable consent before recording or uploading.",
+      "startRecording": "Start a new voice recording.",
+      "uploadAudio": "Upload an existing audio file.",
+      "rerecord": "Discard current audio and record again.",
+      "deleteAudio": "Delete the current saved audio immediately.",
+      "audioNeeded": "You need an audio file first.",
+      "continue": "Continue to topic suggestions."
+    },
+    "deleteDialog": {
+      "title": "Delete saved audio?",
+      "description": "This will remove the current audio and clear topic progress.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
     },
     "toast": {
       "uploadedSuccess": "Audio file uploaded successfully.",
       "recordedSuccess": "Voice note recorded successfully.",
       "invalidAudio": "Please upload a valid audio file.",
-      "tooLargeFile": "Audio file is too large. Maximum allowed size is 20 MB.",
+      "tooLargeFile": "Audio file is too large for instant mode. Large file mode will be used automatically.",
+      "tooLargeForLongUpload": "File too large. Maximum supported size is 1 GB.",
       "cleared": "Previous audio cleared. You can record again.",
-      "demoLoaded": "Demo audio loaded."
+      "demoLoaded": "Demo audio loaded.",
+      "audioDeleted": "Saved audio removed.",
+      "longUploadStarted": "Large file detected. Starting worker processing mode...",
+      "longUploadSuccess": "Large file processing completed successfully.",
+      "longUploadFailed": "Large file processing failed. Please retry or use a smaller file."
     }
   },
   "topics": {
@@ -77,10 +126,31 @@
     "audioMissing": "Audio is missing. Please go back to Step 1 and record or upload audio.",
     "loading": "Analyzing audio to suggest topics...",
     "selectedCount": "Select one or more topics ({{count}} selected)",
+    "searchPlaceholder": "Search topics...",
+    "noFilteredResult": "No topics match this filter.",
+    "filters": {
+      "all": "All",
+      "work": "Work",
+      "anxiety": "Anxiety",
+      "mood": "Mood",
+      "family": "Family"
+    },
     "actions": {
       "analyze": "Analyze Audio",
       "backToStep1": "Back to Step 1",
-      "continue": "Continue to Psychologist Search"
+      "continue": "Continue to Psychologist Search",
+      "undo": "Undo",
+      "redo": "Redo",
+      "quickPick": "Quick pick top 3"
+    },
+    "tooltips": {
+      "undo": "Undo your most recent topic selection change.",
+      "redo": "Redo a reverted topic selection change.",
+      "noUndoHistory": "No previous topic change to undo.",
+      "noRedoHistory": "No reverted topic change to redo.",
+      "quickPick": "Quickly select top recommended topics.",
+      "selectAtLeastOne": "Select at least one topic to continue.",
+      "continue": "Continue to psychologist search."
     },
     "toast": {
       "noAudio": "No audio found. Please record or upload audio first.",
@@ -94,15 +164,57 @@
     "error": "Failed to load psychologists. Please verify the GraphQL endpoint and selected topics.",
     "emptyTitle": "No psychologists found",
     "emptyDescription": "Try adjusting your selected topics or retrying the search.",
+    "emptyDescriptionAdvanced": "No providers match current filters. Try lowering filters or broadening selected topics.",
     "showingCount": "Showing {{shown}} of {{total}} providers",
     "rank": "Rank #{{rank}}",
+    "matchScore": "Match {{score}}",
     "defaultProviderTitle": "Psychologist",
     "unknownProvider": "Unknown provider",
     "yearsExperience": "{{years}} years experience",
     "tagFallback": "Tag",
     "whyMatched": "Why matched: {{reason}}",
+    "scoreBreakdown": {
+      "topics": "Topics {{score}}",
+      "experience": "Experience {{score}}",
+      "profile": "Profile {{score}}"
+    },
+    "filters": {
+      "searchByName": "Search by psychologist name",
+      "sortBy": "Sort by",
+      "sortBestMatch": "Best match",
+      "sortExperience": "Most experienced",
+      "sortName": "Name (A-Z)",
+      "minExperience": "Min. experience",
+      "anyExperience": "Any",
+      "experience3": "3+ years",
+      "experience5": "5+ years",
+      "experience10": "10+ years"
+    },
+    "compare": {
+      "title": "Compare psychologists",
+      "description": "Compare selected providers side-by-side before deciding.",
+      "empty": "No psychologists selected for compare yet.",
+      "close": "Close",
+      "clear": "Clear selection"
+    },
+    "toast": {
+      "maxCompare": "You can compare up to 3 psychologists.",
+      "bookingMock": "Session request sent (mock)."
+    },
     "actions": {
-      "backToStep2": "Back to Step 2"
+      "backToStep2": "Back to Step 2",
+      "compare": "Compare",
+      "compared": "Selected",
+      "compareSelected": "Compare ({{count}})",
+      "requestSession": "Request first session"
+    },
+    "tooltips": {
+      "selectForCompare": "Select at least one psychologist to compare.",
+      "openCompare": "Open compare drawer for selected psychologists.",
+      "addToCompare": "Add this psychologist to compare list.",
+      "removeFromCompare": "Remove this psychologist from compare list.",
+      "requestSession": "Mock action to simulate booking intent.",
+      "loadMore": "Load more ranked psychologists."
     }
   }
 }

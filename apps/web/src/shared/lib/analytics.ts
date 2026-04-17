@@ -4,10 +4,16 @@ type AnalyticsEventName =
   | 'record_started'
   | 'record_stopped'
   | 'audio_uploaded'
+  | 'audio_deleted'
   | 'topics_analyze_started'
   | 'topics_analyze_success'
   | 'topics_selected'
+  | 'topics_undo'
+  | 'topics_redo'
   | 'providers_loaded'
+  | 'providers_filtered'
+  | 'providers_sorted'
+  | 'provider_compared'
   | 'load_more_clicked';
 
 type AnalyticsEvent = {

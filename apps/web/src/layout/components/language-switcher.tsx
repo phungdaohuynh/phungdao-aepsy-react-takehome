@@ -1,36 +1,56 @@
 'use client';
 
 import { i18n, supportedLanguages, type SupportedLanguage } from '@workspace/localization';
-import { useTranslation } from '@workspace/localization';
-import { FormControl, InputLabel, MenuItem, Select } from '@workspace/ui';
+import { Box, IconButton, Menu, MenuItem } from '@workspace/ui';
+import { useState } from 'react';
 
-const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
-  en: 'English',
-  'de-CH': 'Swiss German'
+const LANGUAGE_FLAGS: Record<SupportedLanguage, string> = {
+  en: '🇬🇧',
+  'de-CH': '🇨🇭'
 };
 
 export function LanguageSwitcher() {
-  const { t } = useTranslation();
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const current = (i18n.language || 'en') as SupportedLanguage;
+  const isOpen = Boolean(anchorEl);
 
   return (
-    <FormControl size="small" sx={{ minWidth: 150 }}>
-      <InputLabel id="language-select-label">{t('language.label')}</InputLabel>
-      <Select
-        labelId="language-select-label"
-        label={t('language.label')}
-        value={current}
-        onChange={(event) => {
-          const nextLanguage = event.target.value as SupportedLanguage;
-          void i18n.changeLanguage(nextLanguage);
+    <>
+      <IconButton
+        aria-label="Change language"
+        onClick={(event) => {
+          setAnchorEl(event.currentTarget);
+        }}
+        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+      >
+        <Box component="span" sx={{ fontSize: 22, lineHeight: 1 }}>
+          {LANGUAGE_FLAGS[current]}
+        </Box>
+      </IconButton>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={isOpen}
+        onClose={() => {
+          setAnchorEl(null);
         }}
       >
         {supportedLanguages.map((language) => (
-          <MenuItem key={language} value={language}>
-            {t(`language.options.${language}`, { defaultValue: LANGUAGE_LABELS[language] })}
+          <MenuItem
+            key={language}
+            onClick={() => {
+              void i18n.changeLanguage(language);
+              setAnchorEl(null);
+            }}
+            selected={language === current}
+            sx={{ minWidth: 56, justifyContent: 'center' }}
+          >
+            <Box component="span" sx={{ fontSize: 22, lineHeight: 1 }}>
+              {LANGUAGE_FLAGS[language]}
+            </Box>
           </MenuItem>
         ))}
-      </Select>
-    </FormControl>
+      </Menu>
+    </>
   );
 }

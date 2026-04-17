@@ -1,5 +1,5 @@
 {
-  "appTitle": "Aepsy Take-Home Aufgabe",
+  "appTitle": "Aepsy assignment",
   "heroTitle": "Finde die passende Psychologin in 3 einfachen Schritten",
   "footer": "© {{year}} Aepsy Take-Home",
   "common": {
@@ -8,6 +8,12 @@
     "tryAgain": "Nochmal versuchen",
     "loadMore": "Mehr laden",
     "loadingMore": "Lädt mehr..."
+  },
+  "summary": {
+    "audioReady": "Audio bereit",
+    "audioMissing": "Audio fehlt",
+    "topicsSelected": "Themen: {{count}}",
+    "currentStep": "Schritt: {{step}}"
   },
   "language": {
     "label": "Sprache",
@@ -40,11 +46,25 @@
     "title": "Schritt 1 - Sprachnotiz",
     "subheader": "Nimm eine Sprachnotiz auf oder lade eine vorhandene Audiodatei hoch",
     "description": "Der Recorder behandelt verweigerte Berechtigungen, Tab-Unterbrechungen und erneute Aufnahmen stabil.",
+    "uploadPolicy": "Kleine Dateien werden bis {{smallMb}} MB direkt verarbeitet. Größere Dateien laufen lokal im Worker bis {{largeMb}} MB.",
     "interrupted": "Die Aufnahme wurde unterbrochen. Bitte prüfe sie und nimm bei Bedarf erneut auf.",
     "noAudio": "Noch kein Audio. Nimm auf oder lade eine Datei hoch, um fortzufahren.",
     "restoringPreview": "Gespeicherte Audio-Vorschau wird wiederhergestellt...",
     "sourcePrefix": "Quelle:",
     "liveStatus": "Recorder-Status:",
+    "guidedPromptLabel": "Vorgeschlagene Einstiegsfrage",
+    "consent": {
+      "title": "Bitte bestätige vor der Aufnahme, dass Audio für Themenvorschläge verarbeitet werden darf.",
+      "enable": "Einwilligung aktivieren",
+      "enabled": "Einwilligung aktiv",
+      "note": "Du kannst das Audio jederzeit löschen.",
+      "privacyLink": "Datenschutz"
+    },
+    "prompts": {
+      "prompt1": "Was hat dich diese Woche am meisten belastet?",
+      "prompt2": "Beschreibe eine Situation, in der Stress schwer zu steuern war.",
+      "prompt3": "Welche Unterstützung erhoffst du dir von einer Therapie?"
+    },
     "status": {
       "recording": "Aufnahme läuft",
       "requestingPermission": "Berechtigung wird angefragt",
@@ -59,15 +79,44 @@
       "rerecord": "Neu aufnehmen",
       "upload": "Audio hochladen",
       "demo": "Demo-Audio verwenden",
-      "continue": "Weiter zu Themenvorschlägen"
+      "continue": "Weiter zu Themenvorschlägen",
+      "prevPrompt": "Vorherige Frage",
+      "nextPrompt": "Nächste Frage",
+      "deleteAudioNow": "Audio sofort löschen",
+      "pauseUpload": "Upload pausieren",
+      "resumeUpload": "Upload fortsetzen",
+      "cancelUpload": "Upload abbrechen"
+    },
+    "longUpload": {
+      "status": "Verarbeitung großer Datei {{status}} ({{progress}}%)"
+    },
+    "tooltips": {
+      "consentRequired": "Bitte zuerst Einwilligung aktivieren.",
+      "startRecording": "Neue Sprachaufnahme starten.",
+      "uploadAudio": "Bereits vorhandene Audiodatei hochladen.",
+      "rerecord": "Aktuelles Audio verwerfen und neu aufnehmen.",
+      "deleteAudio": "Aktuell gespeichertes Audio sofort löschen.",
+      "audioNeeded": "Zuerst wird eine Audiodatei benötigt.",
+      "continue": "Weiter zu Themenvorschlägen."
+    },
+    "deleteDialog": {
+      "title": "Gespeichertes Audio löschen?",
+      "description": "Dadurch wird das aktuelle Audio entfernt und Themenfortschritt geleert.",
+      "confirm": "Löschen",
+      "cancel": "Abbrechen"
     },
     "toast": {
       "uploadedSuccess": "Audiodatei erfolgreich hochgeladen.",
       "recordedSuccess": "Sprachnotiz erfolgreich aufgenommen.",
       "invalidAudio": "Bitte lade eine gültige Audiodatei hoch.",
-      "tooLargeFile": "Die Audiodatei ist zu groß. Maximal erlaubt sind 20 MB.",
+      "tooLargeFile": "Datei ist für den Sofortmodus zu groß. Der große Upload-Modus wird automatisch verwendet.",
+      "tooLargeForLongUpload": "Datei zu groß. Maximal unterstützt sind 1 GB.",
       "cleared": "Vorheriges Audio gelöscht. Du kannst erneut aufnehmen.",
-      "demoLoaded": "Demo-Audio geladen."
+      "demoLoaded": "Demo-Audio geladen.",
+      "audioDeleted": "Gespeichertes Audio wurde gelöscht.",
+      "longUploadStarted": "Große Datei erkannt. Worker-Verarbeitung wird gestartet...",
+      "longUploadSuccess": "Verarbeitung großer Datei erfolgreich abgeschlossen.",
+      "longUploadFailed": "Verarbeitung großer Datei fehlgeschlagen. Bitte erneut versuchen oder kleinere Datei nutzen."
     }
   },
   "topics": {
@@ -77,10 +126,31 @@
     "audioMissing": "Audio fehlt. Bitte gehe zu Schritt 1 zurück und nimm auf oder lade Audio hoch.",
     "loading": "Audio wird analysiert, um Themen vorzuschlagen...",
     "selectedCount": "Wähle ein oder mehrere Themen ({{count}} ausgewählt)",
+    "searchPlaceholder": "Themen suchen...",
+    "noFilteredResult": "Keine Themen passen zu diesem Filter.",
+    "filters": {
+      "all": "Alle",
+      "work": "Arbeit",
+      "anxiety": "Angst",
+      "mood": "Stimmung",
+      "family": "Familie"
+    },
     "actions": {
       "analyze": "Audio analysieren",
       "backToStep1": "Zurück zu Schritt 1",
-      "continue": "Weiter zur Psychologinnen-Suche"
+      "continue": "Weiter zur Psychologinnen-Suche",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "quickPick": "Top 3 schnell auswählen"
+    },
+    "tooltips": {
+      "undo": "Letzte Themenänderung rückgängig machen.",
+      "redo": "Rückgängig gemachte Änderung wiederherstellen.",
+      "noUndoHistory": "Keine Änderung zum Rückgängig machen vorhanden.",
+      "noRedoHistory": "Keine Änderung zum Wiederholen vorhanden.",
+      "quickPick": "Top-Themen schnell auswählen.",
+      "selectAtLeastOne": "Mindestens ein Thema auswählen, um fortzufahren.",
+      "continue": "Weiter zur Psychologinnen-Suche."
     },
     "toast": {
       "noAudio": "Kein Audio gefunden. Bitte zuerst aufnehmen oder hochladen.",
@@ -94,15 +164,57 @@
     "error": "Psychologinnen konnten nicht geladen werden. Bitte prüfe den GraphQL-Endpunkt und die ausgewählten Themen.",
     "emptyTitle": "Keine Psychologinnen gefunden",
     "emptyDescription": "Passe deine Themen an oder versuche die Suche erneut.",
+    "emptyDescriptionAdvanced": "Keine Anbieterinnen passen zu den aktuellen Filtern. Reduziere Filter oder erweitere deine Themen.",
     "showingCount": "{{shown}} von {{total}} Psychologinnen werden angezeigt",
     "rank": "Rang #{{rank}}",
+    "matchScore": "Match {{score}}",
     "defaultProviderTitle": "Psychologin",
     "unknownProvider": "Unbekannte Anbieterin",
     "yearsExperience": "{{years}} Jahre Erfahrung",
     "tagFallback": "Tag",
     "whyMatched": "Warum passend: {{reason}}",
+    "scoreBreakdown": {
+      "topics": "Themen {{score}}",
+      "experience": "Erfahrung {{score}}",
+      "profile": "Profil {{score}}"
+    },
+    "filters": {
+      "searchByName": "Nach Name suchen",
+      "sortBy": "Sortieren nach",
+      "sortBestMatch": "Bester Match",
+      "sortExperience": "Meiste Erfahrung",
+      "sortName": "Name (A-Z)",
+      "minExperience": "Min. Erfahrung",
+      "anyExperience": "Beliebig",
+      "experience3": "3+ Jahre",
+      "experience5": "5+ Jahre",
+      "experience10": "10+ Jahre"
+    },
+    "compare": {
+      "title": "Psychologinnen vergleichen",
+      "description": "Vergleiche ausgewählte Anbieterinnen nebeneinander.",
+      "empty": "Noch keine Psychologinnen zum Vergleichen ausgewählt.",
+      "close": "Schließen",
+      "clear": "Auswahl löschen"
+    },
+    "toast": {
+      "maxCompare": "Du kannst maximal 3 Psychologinnen vergleichen.",
+      "bookingMock": "Sitzungsanfrage gesendet (Mock)."
+    },
     "actions": {
-      "backToStep2": "Zurück zu Schritt 2"
+      "backToStep2": "Zurück zu Schritt 2",
+      "compare": "Vergleichen",
+      "compared": "Ausgewählt",
+      "compareSelected": "Vergleichen ({{count}})",
+      "requestSession": "Erste Sitzung anfragen"
+    },
+    "tooltips": {
+      "selectForCompare": "Mindestens eine Psychologin zum Vergleichen auswählen.",
+      "openCompare": "Vergleichsansicht mit ausgewählten Psychologinnen öffnen.",
+      "addToCompare": "Diese Psychologin zur Vergleichsliste hinzufügen.",
+      "removeFromCompare": "Diese Psychologin aus der Vergleichsliste entfernen.",
+      "requestSession": "Mock-Aktion zur Simulation einer Buchungsanfrage.",
+      "loadMore": "Weitere gerankte Psychologinnen laden."
     }
   }
 }

@@ -8,6 +8,7 @@ import { Alert, Container, Stack, Typography, UIStepProgress, UILoadingState } f
 import { ASSIGNMENT_STEPS } from '@/shared/constants/steps';
 import { useAppStore } from '@/shared/state/store';
 import { AnalyticsDevDashboard } from '@/layout/components/analytics-dev-dashboard';
+import { IntakeSummaryBar } from '@/layout/components/intake-summary-bar';
 import { NetworkStatusBanner } from '@/layout/components/network-status-banner';
 import { ResumeDraftBanner } from '@/layout/components/resume-draft-banner';
 
@@ -84,6 +85,7 @@ export function StepShell() {
 
         <NetworkStatusBanner />
         <ResumeDraftBanner />
+        <IntakeSummaryBar />
 
         <UIStepProgress
           steps={ASSIGNMENT_STEPS.map((item) => ({

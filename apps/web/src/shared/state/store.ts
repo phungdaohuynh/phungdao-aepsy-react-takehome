@@ -12,6 +12,8 @@ import type { AppState } from '@/shared/state/types';
 const initialStoreValues = {
   step: 'record' as const,
   selectedTopics: [] as string[],
+  selectedTopicsPast: [] as string[][],
+  selectedTopicsFuture: [] as string[][],
   audioDataUrl: null as string | null,
   audioStorageKey: null as string | null,
   audioMimeType: null as string | null,

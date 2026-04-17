@@ -16,8 +16,13 @@ export type NavigationSlice = {
 
 export type TopicsSlice = {
   selectedTopics: string[];
+  selectedTopicsPast: string[][];
+  selectedTopicsFuture: string[][];
   toggleTopic: (topic: string) => void;
+  setSelectedTopics: (topics: string[]) => void;
   clearSelectedTopics: () => void;
+  undoTopicSelection: () => void;
+  redoTopicSelection: () => void;
 };
 
 export type AudioSlice = {

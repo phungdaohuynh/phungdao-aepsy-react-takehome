@@ -1,14 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from '@workspace/localization';
 import {
   Alert,
   Box,
   Chip,
   Divider,
+  Tooltip,
   Stack,
   Typography,
+  TextField,
   UIButton,
   UILoadingState,
   UISectionCard,
@@ -40,15 +42,30 @@ async function resolveAudioArrayBuffer(audioDataUrl: string | null, audioStorage
   throw new Error('No audio data available.');
 }
 
+const TOPIC_FILTER_GROUPS = [
+  { key: 'all', matcher: () => true },
+  { key: 'work', matcher: (value: string) => value.includes('STRESS') || value.includes('BURNOUT') || value.includes('DRIVE') },
+  { key: 'anxiety', matcher: (value: string) => value.includes('ANXIETY') || value.includes('FEAR') || value.includes('PANIC') },
+  { key: 'mood', matcher: (value: string) => value.includes('DEPRESSION') || value.includes('EMOTION') || value.includes('GRIEF') },
+  { key: 'family', matcher: (value: string) => value.includes('FAMILY') || value.includes('CHILD') || value.includes('RELATION') }
+] as const;
+
 export function StepTopics() {
   const { t } = useTranslation();
   const toast = useUIToast();
   const hasAutoProcessedRef = useRef(false);
+  const [activeFilterGroup, setActiveFilterGroup] = useState<(typeof TOPIC_FILTER_GROUPS)[number]['key']>('all');
+  const [topicQuery, setTopicQuery] = useState('');
 
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
   const audioStorageKey = useAppStore((state) => state.audioStorageKey);
   const selectedTopics = useAppStore((state) => state.selectedTopics);
+  const selectedTopicsPast = useAppStore((state) => state.selectedTopicsPast);
+  const selectedTopicsFuture = useAppStore((state) => state.selectedTopicsFuture);
   const toggleTopic = useAppStore((state) => state.toggleTopic);
+  const setSelectedTopics = useAppStore((state) => state.setSelectedTopics);
+  const undoTopicSelection = useAppStore((state) => state.undoTopicSelection);
+  const redoTopicSelection = useAppStore((state) => state.redoTopicSelection);
   const setStep = useAppStore((state) => state.setStep);
 
   const transcriber = useAudioTranscriber();
@@ -85,6 +102,24 @@ export function StepTopics() {
     const uniqueByValue = new Map(topics.map((item) => [item.value, item]));
     return [...uniqueByValue.values()].sort((a, b) => a.label.localeCompare(b.label));
   }, [transcriber.data]);
+
+  const filteredTopics = useMemo(() => {
+    const normalizedQuery = topicQuery.trim().toLowerCase();
+    const groupConfig = TOPIC_FILTER_GROUPS.find((item) => item.key === activeFilterGroup) ?? TOPIC_FILTER_GROUPS[0];
+
+    return sortedTopics.filter((topic) => {
+      const matchesGroup = groupConfig.matcher(topic.value);
+      if (!matchesGroup) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      return topic.label.toLowerCase().includes(normalizedQuery);
+    });
+  }, [activeFilterGroup, sortedTopics, topicQuery]);
 
   return (
     <UISectionCard title={t('topics.title')} subheader={t('topics.subheader')}>
@@ -129,8 +164,77 @@ export function StepTopics() {
               {t('topics.selectedCount', { count: selectedCount })}
             </Typography>
 
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField
+                size="small"
+                fullWidth
+                value={topicQuery}
+                placeholder={t('topics.searchPlaceholder')}
+                onChange={(event) => setTopicQuery(event.target.value)}
+              />
+              <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                {TOPIC_FILTER_GROUPS.map((group) => (
+                  <Chip
+                    key={group.key}
+                    clickable
+                    color={activeFilterGroup === group.key ? 'primary' : 'default'}
+                    variant={activeFilterGroup === group.key ? 'filled' : 'outlined'}
+                    label={t(`topics.filters.${group.key}`)}
+                    onClick={() => setActiveFilterGroup(group.key)}
+                  />
+                ))}
+              </Stack>
+            </Stack>
+
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap>
+              <Tooltip title={selectedTopicsPast.length === 0 ? t('topics.tooltips.noUndoHistory') : t('topics.tooltips.undo')}>
+                <span>
+                  <UIButton
+                    variant="outlined"
+                    size="small"
+                    disabled={selectedTopicsPast.length === 0}
+                    onClick={() => {
+                      undoTopicSelection();
+                      trackEvent('topics_undo');
+                    }}
+                  >
+                    {t('topics.actions.undo')}
+                  </UIButton>
+                </span>
+              </Tooltip>
+              <Tooltip title={selectedTopicsFuture.length === 0 ? t('topics.tooltips.noRedoHistory') : t('topics.tooltips.redo')}>
+                <span>
+                  <UIButton
+                    variant="outlined"
+                    size="small"
+                    disabled={selectedTopicsFuture.length === 0}
+                    onClick={() => {
+                      redoTopicSelection();
+                      trackEvent('topics_redo');
+                    }}
+                  >
+                    {t('topics.actions.redo')}
+                  </UIButton>
+                </span>
+              </Tooltip>
+              <Tooltip title={t('topics.tooltips.quickPick')}>
+                <span>
+                  <UIButton
+                    variant="text"
+                    size="small"
+                    onClick={() => {
+                      const topRecommended = sortedTopics.slice(0, 3).map((item) => item.value);
+                      setSelectedTopics(topRecommended);
+                    }}
+                  >
+                    {t('topics.actions.quickPick')}
+                  </UIButton>
+                </span>
+              </Tooltip>
+            </Stack>
+
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {sortedTopics.map((topic, index) => {
+              {filteredTopics.map((topic, index) => {
                 const isSelected = selectedTopics.includes(topic.value);
                 const confidence = 0.68 + ((index % 7) * 0.04);
 
@@ -150,6 +254,8 @@ export function StepTopics() {
                 );
               })}
             </Box>
+
+            {filteredTopics.length === 0 ? <Alert severity="info">{t('topics.noFilteredResult')}</Alert> : null}
           </>
         ) : null}
 
@@ -168,9 +274,13 @@ export function StepTopics() {
           <UIButton variant="outlined" onClick={() => setStep('record')}>
             {t('common.back')}
           </UIButton>
-          <UIButton disabled={selectedCount === 0} onClick={() => setStep('psychologists')} data-testid="topics-continue-button">
-            {t('topics.actions.continue')}
-          </UIButton>
+          <Tooltip title={selectedCount === 0 ? t('topics.tooltips.selectAtLeastOne') : t('topics.tooltips.continue')}>
+            <span>
+              <UIButton disabled={selectedCount === 0} onClick={() => setStep('psychologists')} data-testid="topics-continue-button">
+                {t('topics.actions.continue')}
+              </UIButton>
+            </span>
+          </Tooltip>
         </Box>
       </Stack>
     </UISectionCard>

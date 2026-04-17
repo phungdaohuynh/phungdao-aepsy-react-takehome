@@ -1,0 +1,16 @@
+# Default owner
+* @phungdaohuynh
+
+# App + product flow
+/apps/web/ @phungdaohuynh
+
+# Shared packages
+/packages/ui/ @phungdaohuynh
+/packages/localization/ @phungdaohuynh
+/packages/api-client/ @phungdaohuynh
+
+# Tooling and docs
+/packages/config-eslint/ @phungdaohuynh
+/packages/config-typescript/ @phungdaohuynh
+/docs/ @phungdaohuynh
+/.github/ @phungdaohuynh

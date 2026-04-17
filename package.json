@@ -5,6 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "analyze": "pnpm --filter @workspace/web analyze",
@@ -13,11 +14,22 @@
     "test:visual": "pnpm --filter @workspace/web test:visual",
     "test:visual:update": "pnpm --filter @workspace/web test:visual:update",
     "format": "prettier --cache --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,tsx}": [
+      "pnpm exec eslint --fix"
+    ],
+    "*.{json,md,yml,yaml,css,scss}": [
+      "pnpm exec prettier --write"
+    ]
   },
   "devDependencies": {
     "@playwright/test": "1.59.1",
     "@rolldown/binding-darwin-arm64": "1.0.0-rc.15",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "3.8.3",
     "turbo": "2.9.6",
     "typescript": "6.0.2",

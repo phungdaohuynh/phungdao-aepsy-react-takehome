@@ -88,6 +88,15 @@ pnpm test:e2e
 pnpm test:visual
 ```
 
+## Local Git Hooks (Husky)
+- `pre-commit`: runs `lint-staged` (auto-fix ESLint/Prettier on staged files)
+- `pre-push`: runs full `pnpm lint` + `pnpm typecheck`
+
+Install hooks automatically after dependency install:
+```bash
+pnpm install
+```
+
 ## Build and Analyze
 ```bash
 pnpm build
@@ -115,3 +124,9 @@ pnpm analyze
 - `.github/workflows/ci.yml`: lint, typecheck, tests, build, e2e
 - `.github/workflows/visual.yml`: manual visual regression
 - `.github/workflows/security.yml`: dependency review + scheduled audit
+
+## Team Governance
+- CODEOWNERS: [`.github/CODEOWNERS`](.github/CODEOWNERS)
+- PR template: [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md)
+- Architecture guide: [`docs/architecture.md`](docs/architecture.md)
+- Runbook: [`docs/runbook.md`](docs/runbook.md)
