@@ -1,0 +1,19 @@
+{
+  "name": "@workspace/tsconfig",
+  "private": true,
+  "version": "0.0.0",
+  "files": [
+    "base.json",
+    "nextjs.json",
+    "library.json"
+  ],
+  "scripts": {
+    "lint": "eslint scripts/**/*.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@workspace/eslint-config": "workspace:*",
+    "eslint": "9.39.4",
+    "typescript": "6.0.2"
+  }
+}

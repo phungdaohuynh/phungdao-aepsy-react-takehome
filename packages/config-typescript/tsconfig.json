@@ -1,0 +1,7 @@
+{
+  "extends": "./library.json",
+  "compilerOptions": {
+    "resolveJsonModule": true
+  },
+  "include": ["scripts/**/*.ts", "*.json"]
+}

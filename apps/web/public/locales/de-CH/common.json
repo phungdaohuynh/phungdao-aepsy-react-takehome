@@ -1,0 +1,107 @@
+{
+  "appTitle": "Aepsy Take-Home Aufgabe",
+  "heroTitle": "Finde die passende Psychologin in 3 einfachen Schritten",
+  "footer": "© {{year}} Aepsy Take-Home",
+  "common": {
+    "back": "Zurück",
+    "retry": "Erneut versuchen",
+    "tryAgain": "Nochmal versuchen",
+    "loadMore": "Mehr laden",
+    "loadingMore": "Lädt mehr..."
+  },
+  "language": {
+    "label": "Sprache",
+    "options": {
+      "en": "Englisch",
+      "de-CH": "Schweizerdeutsch"
+    }
+  },
+  "steps": {
+    "record": "Aufnahme",
+    "topics": "Themen",
+    "psychologists": "Psychologinnen"
+  },
+  "errors": {
+    "requireTopicBeforeSearch": "Bitte wähle mindestens ein Thema aus, bevor du nach Psychologinnen suchst."
+  },
+  "network": {
+    "offline": "Du bist offline. Einige Aktionen können fehlschlagen, bis die Verbindung wiederhergestellt ist."
+  },
+  "resume": {
+    "clearDraft": "Entwurf löschen",
+    "restored": "Entwurf aus dem lokalen Speicher wiederhergestellt.",
+    "restoredWithTime": "Entwurf aus dem lokalen Speicher wiederhergestellt (zuletzt gespeichert {{label}})."
+  },
+  "error": {
+    "title": "Etwas ist schiefgelaufen",
+    "description": "Beim Laden dieser Seite ist ein unerwarteter Fehler aufgetreten."
+  },
+  "recording": {
+    "title": "Schritt 1 - Sprachnotiz",
+    "subheader": "Nimm eine Sprachnotiz auf oder lade eine vorhandene Audiodatei hoch",
+    "description": "Der Recorder behandelt verweigerte Berechtigungen, Tab-Unterbrechungen und erneute Aufnahmen stabil.",
+    "interrupted": "Die Aufnahme wurde unterbrochen. Bitte prüfe sie und nimm bei Bedarf erneut auf.",
+    "noAudio": "Noch kein Audio. Nimm auf oder lade eine Datei hoch, um fortzufahren.",
+    "sourcePrefix": "Quelle:",
+    "liveStatus": "Recorder-Status:",
+    "status": {
+      "recording": "Aufnahme läuft",
+      "requestingPermission": "Berechtigung wird angefragt",
+      "audioReady": "Audio bereit",
+      "notSupported": "Nicht unterstützt",
+      "error": "Fehler",
+      "ready": "Bereit"
+    },
+    "actions": {
+      "start": "Aufnahme starten",
+      "stop": "Aufnahme stoppen",
+      "rerecord": "Neu aufnehmen",
+      "upload": "Audio hochladen",
+      "demo": "Demo-Audio verwenden",
+      "continue": "Weiter zu Themenvorschlägen"
+    },
+    "toast": {
+      "uploadedSuccess": "Audiodatei erfolgreich hochgeladen.",
+      "recordedSuccess": "Sprachnotiz erfolgreich aufgenommen.",
+      "invalidAudio": "Bitte lade eine gültige Audiodatei hoch.",
+      "tooLargeFile": "Die Audiodatei ist zu groß. Maximal erlaubt sind 20 MB.",
+      "cleared": "Vorheriges Audio gelöscht. Du kannst erneut aufnehmen.",
+      "demoLoaded": "Demo-Audio geladen."
+    }
+  },
+  "topics": {
+    "title": "Schritt 2 - Themenvorschläge",
+    "subheader": "Audio analysieren und passende Themen auswählen",
+    "description": "Themen werden mit dem bereitgestellten Helper generiert:",
+    "audioMissing": "Audio fehlt. Bitte gehe zu Schritt 1 zurück und nimm auf oder lade Audio hoch.",
+    "loading": "Audio wird analysiert, um Themen vorzuschlagen...",
+    "selectedCount": "Wähle ein oder mehrere Themen ({{count}} ausgewählt)",
+    "actions": {
+      "analyze": "Audio analysieren",
+      "backToStep1": "Zurück zu Schritt 1",
+      "continue": "Weiter zur Psychologinnen-Suche"
+    },
+    "toast": {
+      "noAudio": "Kein Audio gefunden. Bitte zuerst aufnehmen oder hochladen.",
+      "analyzeFailed": "Audio konnte nicht verarbeitet werden. Bitte erneut versuchen."
+    }
+  },
+  "psychologists": {
+    "title": "Schritt 3 - Psychologinnen-Suche",
+    "subheader": "Endpoint: {{endpoint}} • Ausgewählte Themen: {{count}}",
+    "loading": "Passende Psychologinnen werden gesucht...",
+    "error": "Psychologinnen konnten nicht geladen werden. Bitte prüfe den GraphQL-Endpunkt und die ausgewählten Themen.",
+    "emptyTitle": "Keine Psychologinnen gefunden",
+    "emptyDescription": "Passe deine Themen an oder versuche die Suche erneut.",
+    "showingCount": "{{shown}} von {{total}} Psychologinnen werden angezeigt",
+    "rank": "Rang #{{rank}}",
+    "defaultProviderTitle": "Psychologin",
+    "unknownProvider": "Unbekannte Anbieterin",
+    "yearsExperience": "{{years}} Jahre Erfahrung",
+    "tagFallback": "Tag",
+    "whyMatched": "Warum passend: {{reason}}",
+    "actions": {
+      "backToStep2": "Zurück zu Schritt 2"
+    }
+  }
+}
