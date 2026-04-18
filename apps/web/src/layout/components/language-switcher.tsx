@@ -18,11 +18,20 @@ export function LanguageSwitcher() {
         onClick={(event) => {
           setAnchorEl(event.currentTarget);
         }}
-        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+        sx={{ borderRadius: 2, p: 0.5 }}
       >
-        <Box component="span" sx={{ fontSize: 22, lineHeight: 1 }}>
-          {LANGUAGE_FLAGS[current]}
-        </Box>
+        <Box
+          component="img"
+          src={LANGUAGE_FLAGS[current].src}
+          alt={LANGUAGE_FLAGS[current].alt}
+          sx={{
+            width: 24,
+            height: 18,
+            display: 'block',
+            objectFit: 'cover',
+            borderRadius: 0.5
+          }}
+        />
       </IconButton>
 
       <Menu
@@ -42,9 +51,18 @@ export function LanguageSwitcher() {
             selected={language === current}
             sx={{ minWidth: 56, justifyContent: 'center' }}
           >
-            <Box component="span" sx={{ fontSize: 22, lineHeight: 1 }}>
-              {LANGUAGE_FLAGS[language]}
-            </Box>
+            <Box
+              component="img"
+              src={LANGUAGE_FLAGS[language].src}
+              alt={LANGUAGE_FLAGS[language].alt}
+              sx={{
+                width: 24,
+                height: 18,
+                display: 'block',
+                objectFit: 'cover',
+                borderRadius: 0.5
+              }}
+            />
           </MenuItem>
         ))}
       </Menu>

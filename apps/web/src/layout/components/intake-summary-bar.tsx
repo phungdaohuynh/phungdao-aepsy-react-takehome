@@ -18,9 +18,6 @@ export function IntakeSummaryBar() {
   return (
     <Box
       sx={{
-        position: 'sticky',
-        top: 8,
-        zIndex: 20,
         px: 1.5,
         py: 1.25,
         borderRadius: 2,

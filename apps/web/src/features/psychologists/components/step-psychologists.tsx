@@ -136,7 +136,7 @@ export function StepPsychologists() {
 
   return (
     <UISectionCard title={t('psychologists.title')} subheader={t('psychologists.subheader', { endpoint, count: selectedTopics.length })}>
-      <Stack spacing={2.5} data-testid="step-psychologists">
+      <Stack spacing={2} data-testid="step-psychologists">
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
           <UIButton variant="outlined" onClick={() => setStep('topics')}>
             {t('psychologists.actions.backToStep2')}

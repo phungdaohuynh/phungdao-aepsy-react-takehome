@@ -395,7 +395,7 @@ export function StepRecording() {
       subheader={t('recording.subheader')}
       action={<Chip label={statusLabel(recorder.state.status, t)} color={statusColor(recorder.state.status)} />}
     >
-      <Stack spacing={2.5} data-testid="step-recording">
+      <Stack spacing={2} data-testid="step-recording">
         <Typography color="text.secondary">
           {t('recording.description')}
         </Typography>
