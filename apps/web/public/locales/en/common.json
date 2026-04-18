@@ -90,6 +90,13 @@
     "longUpload": {
       "status": "Large file processing {{status}} ({{progress}}%)"
     },
+    "history": {
+      "title": "Recent recordings",
+      "subheader": "{{count}} saved item(s), auto-cleaned after 72 hours",
+      "clearAll": "Clear all",
+      "restore": "Restore",
+      "remove": "Remove"
+    },
     "tooltips": {
       "consentRequired": "Enable consent before recording or uploading.",
       "startRecording": "Start a new voice recording.",
@@ -116,7 +123,10 @@
       "audioDeleted": "Saved audio removed.",
       "longUploadStarted": "Large file detected. Starting worker processing mode...",
       "longUploadSuccess": "Large file processing completed successfully.",
-      "longUploadFailed": "Large file processing failed. Please retry or use a smaller file."
+      "longUploadFailed": "Large file processing failed. Please retry or use a smaller file.",
+      "historyMissing": "This saved audio is no longer available.",
+      "historyRestored": "Saved audio restored.",
+      "historyCleared": "Recording history cleared."
     }
   },
   "topics": {

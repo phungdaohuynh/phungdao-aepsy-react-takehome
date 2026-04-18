@@ -1,0 +1,1 @@
+export const TOPICS_HISTORY_MAX_ITEMS = 30;

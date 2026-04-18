@@ -4,10 +4,7 @@ import { i18n, supportedLanguages, type SupportedLanguage } from '@workspace/loc
 import { Box, IconButton, Menu, MenuItem } from '@workspace/ui';
 import { useState } from 'react';
 
-const LANGUAGE_FLAGS: Record<SupportedLanguage, string> = {
-  en: '🇬🇧',
-  'de-CH': '🇨🇭'
-};
+import { LANGUAGE_FLAGS } from '@/layout/constants/language';
 
 export function LanguageSwitcher() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);

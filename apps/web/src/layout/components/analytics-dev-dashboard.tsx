@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, Chip, Divider, Stack, Typography, UIButton, UISectionCard } from '@workspace/ui';
 
+import { ANALYTICS_STORAGE_KEY } from '@/shared/constants/analytics';
+
 type DevAnalyticsEvent = {
   name: string;
   at: string;
   payload?: Record<string, string | number | boolean>;
 };
-
-const STORAGE_KEY = 'aepsy-takehome-analytics-events';
 
 export function AnalyticsDevDashboard() {
   const [events, setEvents] = useState<DevAnalyticsEvent[]>([]);
@@ -18,7 +18,7 @@ export function AnalyticsDevDashboard() {
   useEffect(() => {
     const load = () => {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(ANALYTICS_STORAGE_KEY);
         const parsed = raw ? (JSON.parse(raw) as DevAnalyticsEvent[]) : [];
         setEvents(parsed);
       } catch {
@@ -80,7 +80,7 @@ export function AnalyticsDevDashboard() {
           <UIButton
             variant="text"
             onClick={() => {
-              localStorage.removeItem(STORAGE_KEY);
+              localStorage.removeItem(ANALYTICS_STORAGE_KEY);
               setEvents([]);
             }}
           >

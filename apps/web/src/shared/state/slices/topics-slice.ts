@@ -1,11 +1,10 @@
 import type { StateCreator } from 'zustand';
 
+import { TOPICS_HISTORY_MAX_ITEMS } from '@/shared/constants/state';
 import type { AppState, TopicsSlice } from '@/shared/state/types';
 
-const MAX_HISTORY = 30;
-
 function nextHistory(past: string[][], snapshot: string[]) {
-  return [...past, snapshot].slice(-MAX_HISTORY);
+  return [...past, snapshot].slice(-TOPICS_HISTORY_MAX_ITEMS);
 }
 
 export const createTopicsSlice: StateCreator<AppState, [], [], TopicsSlice> = (set, get) => ({
@@ -46,7 +45,7 @@ export const createTopicsSlice: StateCreator<AppState, [], [], TopicsSlice> = (s
     set({
       selectedTopics: previous,
       selectedTopicsPast: selectedTopicsPast.slice(0, -1),
-      selectedTopicsFuture: [selectedTopics, ...selectedTopicsFuture].slice(0, MAX_HISTORY),
+      selectedTopicsFuture: [selectedTopics, ...selectedTopicsFuture].slice(0, TOPICS_HISTORY_MAX_ITEMS),
       lastUpdatedAt: Date.now()
     });
   },

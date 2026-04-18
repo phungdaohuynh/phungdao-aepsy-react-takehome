@@ -90,6 +90,13 @@
     "longUpload": {
       "status": "Verarbeitung großer Datei {{status}} ({{progress}}%)"
     },
+    "history": {
+      "title": "Letzte Aufnahmen",
+      "subheader": "{{count}} gespeicherte Datei(en), automatische Bereinigung nach 72 Stunden",
+      "clearAll": "Alle löschen",
+      "restore": "Wiederherstellen",
+      "remove": "Entfernen"
+    },
     "tooltips": {
       "consentRequired": "Bitte zuerst Einwilligung aktivieren.",
       "startRecording": "Neue Sprachaufnahme starten.",
@@ -116,7 +123,10 @@
       "audioDeleted": "Gespeichertes Audio wurde gelöscht.",
       "longUploadStarted": "Große Datei erkannt. Worker-Verarbeitung wird gestartet...",
       "longUploadSuccess": "Verarbeitung großer Datei erfolgreich abgeschlossen.",
-      "longUploadFailed": "Verarbeitung großer Datei fehlgeschlagen. Bitte erneut versuchen oder kleinere Datei nutzen."
+      "longUploadFailed": "Verarbeitung großer Datei fehlgeschlagen. Bitte erneut versuchen oder kleinere Datei nutzen.",
+      "historyMissing": "Dieses gespeicherte Audio ist nicht mehr verfügbar.",
+      "historyRestored": "Gespeichertes Audio wiederhergestellt.",
+      "historyCleared": "Aufnahmeverlauf gelöscht."
     }
   },
   "topics": {

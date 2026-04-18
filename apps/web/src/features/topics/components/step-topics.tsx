@@ -17,6 +17,7 @@ import {
   useUIToast
 } from '@workspace/ui';
 
+import { TOPIC_FILTER_GROUPS, type TopicFilterKey } from '@/features/topics/constants/topic-filters';
 import { useAudioTranscriber } from '@/features/topics/hooks/use-audio-transcriber';
 import { trackEvent } from '@/shared/lib/analytics';
 import { getAudioBlob } from '@/shared/lib/audio-storage';
@@ -42,19 +43,11 @@ async function resolveAudioArrayBuffer(audioDataUrl: string | null, audioStorage
   throw new Error('No audio data available.');
 }
 
-const TOPIC_FILTER_GROUPS = [
-  { key: 'all', matcher: () => true },
-  { key: 'work', matcher: (value: string) => value.includes('STRESS') || value.includes('BURNOUT') || value.includes('DRIVE') },
-  { key: 'anxiety', matcher: (value: string) => value.includes('ANXIETY') || value.includes('FEAR') || value.includes('PANIC') },
-  { key: 'mood', matcher: (value: string) => value.includes('DEPRESSION') || value.includes('EMOTION') || value.includes('GRIEF') },
-  { key: 'family', matcher: (value: string) => value.includes('FAMILY') || value.includes('CHILD') || value.includes('RELATION') }
-] as const;
-
 export function StepTopics() {
   const { t } = useTranslation();
   const toast = useUIToast();
   const hasAutoProcessedRef = useRef(false);
-  const [activeFilterGroup, setActiveFilterGroup] = useState<(typeof TOPIC_FILTER_GROUPS)[number]['key']>('all');
+  const [activeFilterGroup, setActiveFilterGroup] = useState<TopicFilterKey>('all');
   const [topicQuery, setTopicQuery] = useState('');
 
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);

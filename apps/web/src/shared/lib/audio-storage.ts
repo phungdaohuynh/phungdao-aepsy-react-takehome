@@ -59,3 +59,8 @@ export async function getAudioBlob(key: string) {
 export async function deleteAudioBlob(key: string) {
   await withStore('readwrite', (store) => store.delete(key));
 }
+
+export async function deleteAudioBlobs(keys: string[]) {
+  const uniqueKeys = [...new Set(keys)];
+  await Promise.all(uniqueKeys.map((key) => deleteAudioBlob(key)));
+}

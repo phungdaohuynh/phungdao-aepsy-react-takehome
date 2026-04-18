@@ -19,6 +19,7 @@ const initialStoreValues = {
   audioMimeType: null as string | null,
   audioFileName: null as string | null,
   audioSourceType: null as AppState['audioSourceType'],
+  recordingHistory: [] as AppState['recordingHistory'],
   lastUpdatedAt: null as number | null,
   hasHydrated: false
 };

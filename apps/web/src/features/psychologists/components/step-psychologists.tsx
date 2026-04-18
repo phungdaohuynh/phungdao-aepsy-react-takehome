@@ -26,17 +26,12 @@ import {
 } from '@workspace/ui';
 
 import { usePsychologistsQuery } from '@/features/psychologists/api/use-psychologists-query';
+import { DEFAULT_GRAPHQL_ENDPOINT } from '@/features/psychologists/constants/search';
 import { getProviderMatchReasons, getProviderMatchScore } from '@/features/psychologists/lib/provider-matching';
+import { getProviderFullName } from '@/features/psychologists/lib/provider-name';
 import { env } from '@/shared/config/env';
 import { trackEvent } from '@/shared/lib/analytics';
 import { useAppStore } from '@/shared/state/store';
-
-const DEFAULT_GRAPHQL_ENDPOINT = 'https://api-dev.aepsy.com/graphql';
-
-function getFullName(firstName: string | null | undefined, lastName: string | null | undefined) {
-  const parts = [firstName, lastName].filter(Boolean);
-  return parts.length > 0 ? parts.join(' ') : '';
-}
 
 export function StepPsychologists() {
   const { t } = useTranslation();
@@ -77,7 +72,7 @@ export function StepPsychologists() {
     const normalizedQuery = nameQuery.trim().toLowerCase();
 
     const filtered = enrichedProviders.filter((item) => {
-      const fullName = getFullName(item.provider.userName.firstName, item.provider.userName.lastName).toLowerCase();
+      const fullName = getProviderFullName(item.provider.userName.firstName, item.provider.userName.lastName).toLowerCase();
       const years = item.provider.profile?.providerInfo?.yearExperience ?? 0;
       const matchesName = normalizedQuery.length === 0 || fullName.includes(normalizedQuery);
       const matchesExperience = years >= minExperienceFilter;
@@ -91,8 +86,8 @@ export function StepPsychologists() {
       }
 
       if (sortBy === 'name_asc') {
-        const nameA = getFullName(a.provider.userName.firstName, a.provider.userName.lastName);
-        const nameB = getFullName(b.provider.userName.firstName, b.provider.userName.lastName);
+        const nameA = getProviderFullName(a.provider.userName.firstName, a.provider.userName.lastName);
+        const nameB = getProviderFullName(b.provider.userName.firstName, b.provider.userName.lastName);
         return nameA.localeCompare(nameB);
       }
 
@@ -231,7 +226,7 @@ export function StepPsychologists() {
 
             <Stack spacing={1.5} divider={<Divider flexItem />}>
               {filteredProviders.map(({ provider, reasons, score }, index) => {
-                const fullName = getFullName(provider.userName.firstName, provider.userName.lastName);
+                const fullName = getProviderFullName(provider.userName.firstName, provider.userName.lastName);
                 const providerTitle = provider.profile?.providerInfo?.providerTitle ?? t('psychologists.defaultProviderTitle');
                 const yearExperience = provider.profile?.providerInfo?.yearExperience;
                 const tags = provider.profile?.providerTagInfo?.tags ?? [];
@@ -370,7 +365,7 @@ export function StepPsychologists() {
 
           <Stack spacing={1.25}>
             {compareProviders.map(({ provider, score }) => {
-              const name = getFullName(provider.userName.firstName, provider.userName.lastName) || t('psychologists.unknownProvider');
+              const name = getProviderFullName(provider.userName.firstName, provider.userName.lastName) || t('psychologists.unknownProvider');
               const title = provider.profile?.providerInfo?.providerTitle ?? t('psychologists.defaultProviderTitle');
               const years = provider.profile?.providerInfo?.yearExperience ?? 0;
 

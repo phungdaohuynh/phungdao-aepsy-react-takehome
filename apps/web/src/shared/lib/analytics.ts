@@ -1,5 +1,7 @@
 'use client';
 
+import { ANALYTICS_MAX_EVENTS, ANALYTICS_STORAGE_KEY } from '@/shared/constants/analytics';
+
 type AnalyticsEventName =
   | 'record_started'
   | 'record_stopped'
@@ -14,6 +16,8 @@ type AnalyticsEventName =
   | 'providers_filtered'
   | 'providers_sorted'
   | 'provider_compared'
+  | 'history_restored'
+  | 'history_cleared'
   | 'load_more_clicked';
 
 type AnalyticsEvent = {
@@ -21,9 +25,6 @@ type AnalyticsEvent = {
   at: string;
   payload?: Record<string, string | number | boolean>;
 };
-
-const STORAGE_KEY = 'aepsy-takehome-analytics-events';
-const MAX_EVENTS = 200;
 
 export function trackEvent(name: AnalyticsEventName, payload?: AnalyticsEvent['payload']) {
   if (typeof window === 'undefined') {
@@ -37,10 +38,10 @@ export function trackEvent(name: AnalyticsEventName, payload?: AnalyticsEvent['p
   };
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(ANALYTICS_STORAGE_KEY);
     const parsed = raw ? (JSON.parse(raw) as AnalyticsEvent[]) : [];
-    const next = [...parsed, event].slice(-MAX_EVENTS);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    const next = [...parsed, event].slice(-ANALYTICS_MAX_EVENTS);
+    localStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(next));
   } catch {
     // Ignore analytics storage failures.
   }
