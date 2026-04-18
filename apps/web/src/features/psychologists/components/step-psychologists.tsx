@@ -22,12 +22,15 @@ import {
   UILoadingState,
   UIListSkeleton,
   UISectionCard,
-  useUIToast
+  useUIToast,
 } from '@workspace/ui';
 
 import { usePsychologistsQuery } from '@/features/psychologists/api/use-psychologists-query';
 import { DEFAULT_GRAPHQL_ENDPOINT } from '@/features/psychologists/constants/search';
-import { getProviderMatchReasons, getProviderMatchScore } from '@/features/psychologists/lib/provider-matching';
+import {
+  getProviderMatchReasons,
+  getProviderMatchScore,
+} from '@/features/psychologists/lib/provider-matching';
 import { getProviderFullName } from '@/features/psychologists/lib/provider-name';
 import { env } from '@/shared/config/env';
 import { trackEvent } from '@/shared/lib/analytics';
@@ -49,13 +52,16 @@ export function StepPsychologists() {
   const query = usePsychologistsQuery({
     rawDisorders: selectedTopics,
     endpoint,
-    pageSize: 8
+    pageSize: 8,
   });
 
   const providers = (query.data?.pages ?? []).flatMap((page) => page.items);
 
   const uniqueProviders = providers.filter((provider, index) => {
-    return providers.findIndex((item) => item.userInfo.firebaseUid === provider.userInfo.firebaseUid) === index;
+    return (
+      providers.findIndex((item) => item.userInfo.firebaseUid === provider.userInfo.firebaseUid) ===
+      index
+    );
   });
 
   const enrichedProviders = useMemo(
@@ -63,16 +69,19 @@ export function StepPsychologists() {
       uniqueProviders.map((provider) => ({
         provider,
         reasons: getProviderMatchReasons(provider, selectedTopics),
-        score: getProviderMatchScore(provider, selectedTopics)
+        score: getProviderMatchScore(provider, selectedTopics),
       })),
-    [selectedTopics, uniqueProviders]
+    [selectedTopics, uniqueProviders],
   );
 
   const filteredProviders = useMemo(() => {
     const normalizedQuery = nameQuery.trim().toLowerCase();
 
     const filtered = enrichedProviders.filter((item) => {
-      const fullName = getProviderFullName(item.provider.userName.firstName, item.provider.userName.lastName).toLowerCase();
+      const fullName = getProviderFullName(
+        item.provider.userName.firstName,
+        item.provider.userName.lastName,
+      ).toLowerCase();
       const years = item.provider.profile?.providerInfo?.yearExperience ?? 0;
       const matchesName = normalizedQuery.length === 0 || fullName.includes(normalizedQuery);
       const matchesExperience = years >= minExperienceFilter;
@@ -82,12 +91,21 @@ export function StepPsychologists() {
 
     return [...filtered].sort((a, b) => {
       if (sortBy === 'experience_desc') {
-        return (b.provider.profile?.providerInfo?.yearExperience ?? 0) - (a.provider.profile?.providerInfo?.yearExperience ?? 0);
+        return (
+          (b.provider.profile?.providerInfo?.yearExperience ?? 0) -
+          (a.provider.profile?.providerInfo?.yearExperience ?? 0)
+        );
       }
 
       if (sortBy === 'name_asc') {
-        const nameA = getProviderFullName(a.provider.userName.firstName, a.provider.userName.lastName);
-        const nameB = getProviderFullName(b.provider.userName.firstName, b.provider.userName.lastName);
+        const nameA = getProviderFullName(
+          a.provider.userName.firstName,
+          a.provider.userName.lastName,
+        );
+        const nameB = getProviderFullName(
+          b.provider.userName.firstName,
+          b.provider.userName.lastName,
+        );
         return nameA.localeCompare(nameB);
       }
 
@@ -96,8 +114,9 @@ export function StepPsychologists() {
   }, [enrichedProviders, minExperienceFilter, nameQuery, sortBy]);
 
   const compareProviders = useMemo(
-    () => filteredProviders.filter((item) => compareIds.includes(item.provider.userInfo.firebaseUid)),
-    [compareIds, filteredProviders]
+    () =>
+      filteredProviders.filter((item) => compareIds.includes(item.provider.userInfo.firebaseUid)),
+    [compareIds, filteredProviders],
   );
 
   const totalSize = query.data?.pages[0]?.totalSize ?? 0;
@@ -106,7 +125,7 @@ export function StepPsychologists() {
     if (query.isSuccess && filteredProviders.length > 0) {
       trackEvent('providers_loaded', {
         providers: filteredProviders.length,
-        topics: selectedTopics.length
+        topics: selectedTopics.length,
       });
     }
   }, [filteredProviders.length, query.isSuccess, selectedTopics.length]);
@@ -135,7 +154,10 @@ export function StepPsychologists() {
   }
 
   return (
-    <UISectionCard title={t('psychologists.title')} subheader={t('psychologists.subheader', { endpoint, count: selectedTopics.length })}>
+    <UISectionCard
+      title={t('psychologists.title')}
+      subheader={t('psychologists.subheader', { endpoint, count: selectedTopics.length })}
+    >
       <Stack spacing={2} data-testid="step-psychologists">
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
           <UIButton variant="outlined" onClick={() => setStep('topics')}>
@@ -177,12 +199,16 @@ export function StepPsychologists() {
               onChange={(event) => setSortBy(event.target.value as typeof sortBy)}
             >
               <MenuItem value="best_match">{t('psychologists.filters.sortBestMatch')}</MenuItem>
-              <MenuItem value="experience_desc">{t('psychologists.filters.sortExperience')}</MenuItem>
+              <MenuItem value="experience_desc">
+                {t('psychologists.filters.sortExperience')}
+              </MenuItem>
               <MenuItem value="name_asc">{t('psychologists.filters.sortName')}</MenuItem>
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 170 }}>
-            <InputLabel id="exp-filter-label">{t('psychologists.filters.minExperience')}</InputLabel>
+            <InputLabel id="exp-filter-label">
+              {t('psychologists.filters.minExperience')}
+            </InputLabel>
             <Select
               labelId="exp-filter-label"
               label={t('psychologists.filters.minExperience')}
@@ -221,33 +247,58 @@ export function StepPsychologists() {
         {filteredProviders.length > 0 ? (
           <>
             <Typography variant="body2" color="text.secondary">
-              {t('psychologists.showingCount', { shown: filteredProviders.length, total: totalSize })}
+              {t('psychologists.showingCount', {
+                shown: filteredProviders.length,
+                total: totalSize,
+              })}
             </Typography>
 
             <Stack spacing={1.5} divider={<Divider flexItem />}>
               {filteredProviders.map(({ provider, reasons, score }, index) => {
-                const fullName = getProviderFullName(provider.userName.firstName, provider.userName.lastName);
-                const providerTitle = provider.profile?.providerInfo?.providerTitle ?? t('psychologists.defaultProviderTitle');
+                const fullName = getProviderFullName(
+                  provider.userName.firstName,
+                  provider.userName.lastName,
+                );
+                const providerTitle =
+                  provider.profile?.providerInfo?.providerTitle ??
+                  t('psychologists.defaultProviderTitle');
                 const yearExperience = provider.profile?.providerInfo?.yearExperience;
                 const tags = provider.profile?.providerTagInfo?.tags ?? [];
                 const isCompared = compareIds.includes(provider.userInfo.firebaseUid);
 
                 return (
-                  <Box key={provider.userInfo.firebaseUid} data-testid={`provider-card-${provider.userInfo.firebaseUid}`}>
+                  <Box
+                    key={provider.userInfo.firebaseUid}
+                    data-testid={`provider-card-${provider.userInfo.firebaseUid}`}
+                  >
                     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-                      <Avatar src={provider.userInfo.avatar ?? undefined} alt={fullName || t('psychologists.unknownProvider')} />
+                      <Avatar
+                        src={provider.userInfo.avatar ?? undefined}
+                        alt={fullName || t('psychologists.unknownProvider')}
+                      />
 
                       <Stack spacing={0.8} sx={{ flex: 1 }}>
                         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                             {fullName || t('psychologists.unknownProvider')}
                           </Typography>
-                          <Chip size="small" color="secondary" variant="outlined" label={t('psychologists.rank', { rank: index + 1 })} />
-                          <Chip size="small" color="success" label={t('psychologists.matchScore', { score: score.totalScore })} />
+                          <Chip
+                            size="small"
+                            color="secondary"
+                            variant="outlined"
+                            label={t('psychologists.rank', { rank: index + 1 })}
+                          />
+                          <Chip
+                            size="small"
+                            color="success"
+                            label={t('psychologists.matchScore', { score: score.totalScore })}
+                          />
                         </Stack>
                         <Typography variant="body2" color="text.secondary">
                           {providerTitle}
-                          {typeof yearExperience === 'number' ? ` • ${t('psychologists.yearsExperience', { years: yearExperience })}` : ''}
+                          {typeof yearExperience === 'number'
+                            ? ` • ${t('psychologists.yearsExperience', { years: yearExperience })}`
+                            : ''}
                         </Typography>
 
                         <Stack direction="row" spacing={0.8} useFlexGap sx={{ flexWrap: 'wrap' }}>
@@ -273,13 +324,37 @@ export function StepPsychologists() {
                         </Stack>
 
                         <Stack direction="row" spacing={0.8} useFlexGap sx={{ flexWrap: 'wrap' }}>
-                          <Chip size="small" variant="outlined" label={t('psychologists.scoreBreakdown.topics', { score: score.topicMatchScore })} />
-                          <Chip size="small" variant="outlined" label={t('psychologists.scoreBreakdown.experience', { score: score.experienceScore })} />
-                          <Chip size="small" variant="outlined" label={t('psychologists.scoreBreakdown.profile', { score: score.profileCompletenessScore })} />
+                          <Chip
+                            size="small"
+                            variant="outlined"
+                            label={t('psychologists.scoreBreakdown.topics', {
+                              score: score.topicMatchScore,
+                            })}
+                          />
+                          <Chip
+                            size="small"
+                            variant="outlined"
+                            label={t('psychologists.scoreBreakdown.experience', {
+                              score: score.experienceScore,
+                            })}
+                          />
+                          <Chip
+                            size="small"
+                            variant="outlined"
+                            label={t('psychologists.scoreBreakdown.profile', {
+                              score: score.profileCompletenessScore,
+                            })}
+                          />
                         </Stack>
 
                         <Stack direction="row" spacing={1}>
-                          <Tooltip title={isCompared ? t('psychologists.tooltips.removeFromCompare') : t('psychologists.tooltips.addToCompare')}>
+                          <Tooltip
+                            title={
+                              isCompared
+                                ? t('psychologists.tooltips.removeFromCompare')
+                                : t('psychologists.tooltips.addToCompare')
+                            }
+                          >
                             <span>
                               <UIButton
                                 size="small"
@@ -287,7 +362,9 @@ export function StepPsychologists() {
                                 onClick={() => {
                                   setCompareIds((current) => {
                                     if (current.includes(provider.userInfo.firebaseUid)) {
-                                      return current.filter((item) => item !== provider.userInfo.firebaseUid);
+                                      return current.filter(
+                                        (item) => item !== provider.userInfo.firebaseUid,
+                                      );
                                     }
 
                                     if (current.length >= 3) {
@@ -297,10 +374,14 @@ export function StepPsychologists() {
 
                                     return [...current, provider.userInfo.firebaseUid];
                                   });
-                                  trackEvent('provider_compared', { provider: provider.userInfo.firebaseUid });
+                                  trackEvent('provider_compared', {
+                                    provider: provider.userInfo.firebaseUid,
+                                  });
                                 }}
                               >
-                                {isCompared ? t('psychologists.actions.compared') : t('psychologists.actions.compare')}
+                                {isCompared
+                                  ? t('psychologists.actions.compared')
+                                  : t('psychologists.actions.compare')}
                               </UIButton>
                             </span>
                           </Tooltip>
@@ -330,7 +411,7 @@ export function StepPsychologists() {
                 sx={{
                   position: { xs: 'sticky', md: 'static' },
                   bottom: { xs: 12, md: 'auto' },
-                  zIndex: 5
+                  zIndex: 5,
                 }}
               >
                 <Tooltip title={t('psychologists.tooltips.loadMore')}>
@@ -356,25 +437,43 @@ export function StepPsychologists() {
 
       <Drawer anchor="right" open={isCompareOpen} onClose={() => setCompareOpen(false)}>
         <Box sx={{ width: { xs: 320, sm: 420 }, p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>{t('psychologists.compare.title')}</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            {t('psychologists.compare.title')}
+          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {t('psychologists.compare.description')}
           </Typography>
 
-          {compareProviders.length === 0 ? <Alert severity="info">{t('psychologists.compare.empty')}</Alert> : null}
+          {compareProviders.length === 0 ? (
+            <Alert severity="info">{t('psychologists.compare.empty')}</Alert>
+          ) : null}
 
           <Stack spacing={1.25}>
             {compareProviders.map(({ provider, score }) => {
-              const name = getProviderFullName(provider.userName.firstName, provider.userName.lastName) || t('psychologists.unknownProvider');
-              const title = provider.profile?.providerInfo?.providerTitle ?? t('psychologists.defaultProviderTitle');
+              const name =
+                getProviderFullName(provider.userName.firstName, provider.userName.lastName) ||
+                t('psychologists.unknownProvider');
+              const title =
+                provider.profile?.providerInfo?.providerTitle ??
+                t('psychologists.defaultProviderTitle');
               const years = provider.profile?.providerInfo?.yearExperience ?? 0;
 
               return (
-                <Box key={`compare-${provider.userInfo.firebaseUid}`} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{name}</Typography>
-                  <Typography variant="caption" color="text.secondary">{title}</Typography>
+                <Box
+                  key={`compare-${provider.userInfo.firebaseUid}`}
+                  sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}
+                >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    {name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {title}
+                  </Typography>
                   <Stack direction="row" spacing={0.75} useFlexGap sx={{ mt: 1, flexWrap: 'wrap' }}>
-                    <Chip size="small" label={t('psychologists.matchScore', { score: score.totalScore })} />
+                    <Chip
+                      size="small"
+                      label={t('psychologists.matchScore', { score: score.totalScore })}
+                    />
                     <Chip size="small" label={t('psychologists.yearsExperience', { years })} />
                   </Stack>
                 </Box>

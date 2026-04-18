@@ -1,10 +1,12 @@
 import type {
   SearchProvidersNodeDto,
   SearchProvidersPage,
-  SearchProvidersResponseDto
+  SearchProvidersResponseDto,
 } from '@/features/psychologists/api/dto';
 
-export function normalizeSearchProvidersNode(response: SearchProvidersResponseDto): SearchProvidersNodeDto | null {
+export function normalizeSearchProvidersNode(
+  response: SearchProvidersResponseDto,
+): SearchProvidersNodeDto | null {
   const node = response.searchProviders;
 
   if (Array.isArray(node)) {
@@ -14,13 +16,16 @@ export function normalizeSearchProvidersNode(response: SearchProvidersResponseDt
   return node ?? null;
 }
 
-export function mapSearchProvidersPage(node: SearchProvidersNodeDto | null, pageNum: number): SearchProvidersPage {
+export function mapSearchProvidersPage(
+  node: SearchProvidersNodeDto | null,
+  pageNum: number,
+): SearchProvidersPage {
   if (!node) {
     return {
       items: [],
       canLoadMore: false,
       totalSize: 0,
-      pageNum
+      pageNum,
     };
   }
 
@@ -28,6 +33,6 @@ export function mapSearchProvidersPage(node: SearchProvidersNodeDto | null, page
     items: node.providers.providers,
     canLoadMore: node.providers.canLoadMore,
     totalSize: node.providers.totalSize,
-    pageNum
+    pageNum,
   };
 }

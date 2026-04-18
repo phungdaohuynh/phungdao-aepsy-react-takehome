@@ -64,7 +64,7 @@ const INITIAL_STATE: LargeUploadState = {
   uploadedBytes: 0,
   totalBytes: 0,
   sessionId: null,
-  error: null
+  error: null,
 };
 
 function createSessionId() {
@@ -86,7 +86,7 @@ export function useLargeAudioUpload(chunkSize = DEFAULT_CHUNK_SIZE) {
     }
 
     const worker = new Worker(new URL('../workers/large-audio.worker.ts', import.meta.url), {
-      type: 'module'
+      type: 'module',
     });
     workerRef.current = worker;
 
@@ -108,7 +108,7 @@ export function useLargeAudioUpload(chunkSize = DEFAULT_CHUNK_SIZE) {
           status: current.status === 'paused' ? 'paused' : 'uploading',
           uploadedBytes: data.payload.uploadedBytes,
           totalBytes: data.payload.totalBytes,
-          progress: data.payload.progress
+          progress: data.payload.progress,
         }));
         return;
       }
@@ -118,7 +118,7 @@ export function useLargeAudioUpload(chunkSize = DEFAULT_CHUNK_SIZE) {
           ...current,
           status: 'success',
           progress: 100,
-          uploadedBytes: current.totalBytes
+          uploadedBytes: current.totalBytes,
         }));
         pending.resolve({ sessionId: pending.sessionId, digest: data.payload.digest });
         pendingRef.current = null;
@@ -197,14 +197,14 @@ export function useLargeAudioUpload(chunkSize = DEFAULT_CHUNK_SIZE) {
         uploadedBytes: 0,
         totalBytes: file.size,
         sessionId,
-        error: null
+        error: null,
       });
 
       const result = await new Promise<{ sessionId: string; digest: number }>((resolve, reject) => {
         pendingRef.current = {
           sessionId,
           resolve,
-          reject
+          reject,
         };
 
         worker.postMessage({
@@ -212,14 +212,14 @@ export function useLargeAudioUpload(chunkSize = DEFAULT_CHUNK_SIZE) {
           payload: {
             sessionId,
             file,
-            chunkSize
-          }
+            chunkSize,
+          },
         } satisfies WorkerCommand);
       });
 
       return result;
     },
-    [chunkSize, getWorker]
+    [chunkSize, getWorker],
   );
 
   return {
@@ -228,6 +228,6 @@ export function useLargeAudioUpload(chunkSize = DEFAULT_CHUNK_SIZE) {
     pauseUpload,
     resumeUpload,
     cancelUpload,
-    reset
+    reset,
   };
 }

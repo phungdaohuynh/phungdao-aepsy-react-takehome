@@ -22,14 +22,14 @@ type GetUserMediaFn = (constraints: MediaStreamConstraints) => Promise<MediaStre
 function setMediaDevices(getUserMedia: GetUserMediaFn) {
   Object.defineProperty(navigator, 'mediaDevices', {
     value: { getUserMedia },
-    configurable: true
+    configurable: true,
   });
 }
 
 function setMediaRecorder(ctor: typeof FakeMediaRecorder | undefined) {
   Object.defineProperty(window, 'MediaRecorder', {
     value: ctor,
-    configurable: true
+    configurable: true,
   });
 }
 
@@ -38,9 +38,9 @@ function createStreamMock(): MediaStream {
     getTracks: () =>
       [
         {
-          stop: vi.fn()
-        }
-      ] as unknown as MediaStreamTrack[]
+          stop: vi.fn(),
+        },
+      ] as unknown as MediaStreamTrack[],
   } as MediaStream;
 }
 
@@ -60,8 +60,8 @@ describe('useAudioRecorderMachine', () => {
     const { result } = renderHook(() =>
       useAudioRecorderMachine({
         onAudioReady: vi.fn(),
-        onError
-      })
+        onError,
+      }),
     );
 
     await act(async () => {
@@ -72,8 +72,12 @@ describe('useAudioRecorderMachine', () => {
       expect(result.current.state.status).toBe('error');
     });
 
-    expect(result.current.state.error).toBe('Microphone permission denied. You can upload an audio file instead.');
-    expect(onError).toHaveBeenCalledWith('Microphone permission denied. You can upload an audio file instead.');
+    expect(result.current.state.error).toBe(
+      'Microphone permission denied. You can upload an audio file instead.',
+    );
+    expect(onError).toHaveBeenCalledWith(
+      'Microphone permission denied. You can upload an audio file instead.',
+    );
   });
 
   it('marks recording as interrupted when tab is hidden and does not crash with empty chunks', async () => {
@@ -83,8 +87,8 @@ describe('useAudioRecorderMachine', () => {
     const { result } = renderHook(() =>
       useAudioRecorderMachine({
         onAudioReady: vi.fn(),
-        onError: vi.fn()
-      })
+        onError: vi.fn(),
+      }),
     );
 
     await act(async () => {
@@ -116,8 +120,8 @@ describe('useAudioRecorderMachine', () => {
     const { result } = renderHook(() =>
       useAudioRecorderMachine({
         onAudioReady: vi.fn(),
-        onError: vi.fn()
-      })
+        onError: vi.fn(),
+      }),
     );
 
     await waitFor(() => {

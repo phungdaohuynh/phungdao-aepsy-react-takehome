@@ -50,7 +50,12 @@ export function AppProviders({ children }: PropsWithChildren) {
   }, [audioDataUrl, audioStorageKey, setAudioDataUrl]);
 
   useEffect(() => {
-    if (hydratedKeyRef.current && audioStorageKey && hydratedKeyRef.current !== audioStorageKey && hydratedPreviewRef.current) {
+    if (
+      hydratedKeyRef.current &&
+      audioStorageKey &&
+      hydratedKeyRef.current !== audioStorageKey &&
+      hydratedPreviewRef.current
+    ) {
       URL.revokeObjectURL(hydratedPreviewRef.current);
       hydratedPreviewRef.current = null;
       hydratedKeyRef.current = null;

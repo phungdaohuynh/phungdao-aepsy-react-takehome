@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 
 export const baseConfig = [
   {
-    ignores: ['dist/**', '.next/**', 'coverage/**', 'node_modules/**']
+    ignores: ['dist/**', '.next/**', 'coverage/**', 'node_modules/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -12,10 +12,10 @@ export const baseConfig = [
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.es2022
-      }
-    }
-  }
+        ...globals.es2022,
+      },
+    },
+  },
 ];
 
 export default baseConfig;

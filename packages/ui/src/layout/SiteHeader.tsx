@@ -22,7 +22,7 @@ export function UISiteHeader({ title, rightSlot }: UISiteHeaderProps) {
         borderBottom: '1px solid',
         borderColor: 'divider',
         backdropFilter: 'blur(8px)',
-        backgroundColor: 'rgba(252, 252, 253, 0.85)'
+        backgroundColor: 'rgba(252, 252, 253, 0.85)',
       }}
     >
       <Container maxWidth="lg">

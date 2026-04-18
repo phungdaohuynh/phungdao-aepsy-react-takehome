@@ -7,7 +7,7 @@ import {
   type FieldValues,
   type Resolver,
   type UseFormProps,
-  type UseFormReturn
+  type UseFormReturn,
 } from 'react-hook-form';
 import type { ZodTypeAny } from 'zod';
 
@@ -18,10 +18,10 @@ type UseUIFormConfig<TFieldValues extends FieldValues> = {
 };
 
 export function useUIForm<TFieldValues extends FieldValues = FieldValues>(
-  config?: UseUIFormConfig<TFieldValues>
+  config?: UseUIFormConfig<TFieldValues>,
 ): UseFormReturn<TFieldValues> {
   const formConfig: UseFormProps<TFieldValues> = {
-    ...config?.formOptions
+    ...config?.formOptions,
   };
 
   if (config?.defaultValues) {

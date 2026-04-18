@@ -78,8 +78,8 @@ async function handleStart(sessionId: string, file: File, chunkSize: number) {
       type: 'ERROR',
       payload: {
         sessionId,
-        message: 'Worker is busy with another large file.'
-      }
+        message: 'Worker is busy with another large file.',
+      },
     });
     return;
   }
@@ -118,8 +118,8 @@ async function handleStart(sessionId: string, file: File, chunkSize: number) {
           sessionId,
           uploadedBytes,
           totalBytes,
-          progress: Math.min(100, Math.round((uploadedBytes / totalBytes) * 100))
-        }
+          progress: Math.min(100, Math.round((uploadedBytes / totalBytes) * 100)),
+        },
       });
     }
 
@@ -127,8 +127,8 @@ async function handleStart(sessionId: string, file: File, chunkSize: number) {
       type: 'DONE',
       payload: {
         sessionId,
-        digest
-      }
+        digest,
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown worker error.';
@@ -136,8 +136,8 @@ async function handleStart(sessionId: string, file: File, chunkSize: number) {
       type: 'ERROR',
       payload: {
         sessionId,
-        message
-      }
+        message,
+      },
     });
   } finally {
     isRunning = false;

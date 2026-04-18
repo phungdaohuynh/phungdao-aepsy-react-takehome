@@ -21,7 +21,7 @@ const initialStoreValues = {
   audioSourceType: null as AppState['audioSourceType'],
   recordingHistory: [] as AppState['recordingHistory'],
   lastUpdatedAt: null as number | null,
-  hasHydrated: false
+  hasHydrated: false,
 };
 
 export const useAppStore = create<AppState>()(
@@ -34,21 +34,21 @@ export const useAppStore = create<AppState>()(
       reset: () =>
         set({
           ...initialStoreValues,
-          hasHydrated: true
-        })
+          hasHydrated: true,
+        }),
     }),
     {
       name: 'aepsy-takehome-progress',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         ...state,
-        audioDataUrl: null
+        audioDataUrl: null,
       }),
       onRehydrateStorage: () => (state) => {
         state?.markHydrated(true);
-      }
-    }
-  )
+      },
+    },
+  ),
 );
 
 export type { AppState, AssignmentStep, AudioPayload, AudioSourceType } from '@/shared/state/types';

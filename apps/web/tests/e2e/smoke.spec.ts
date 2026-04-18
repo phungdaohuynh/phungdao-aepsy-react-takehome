@@ -24,10 +24,10 @@ async function mockGraphql(page: Page) {
           providerTagInfo: {
             tags: [
               { type: 'DISORDER', subType: 'ANXIETY', text: 'Stress' },
-              { type: 'DISORDER', subType: 'SLEEP', text: 'Sleep problems' }
-            ]
-          }
-        }
+              { type: 'DISORDER', subType: 'SLEEP', text: 'Sleep problems' },
+            ],
+          },
+        },
       },
       {
         userInfo: { firebaseUid: 'provider-2', avatar: null },
@@ -35,10 +35,10 @@ async function mockGraphql(page: Page) {
         profile: {
           providerInfo: { yearExperience: 5, providerTitle: 'Psychotherapist' },
           providerTagInfo: {
-            tags: [{ type: 'DISORDER', subType: 'PANIC', text: 'Sudden panic' }]
-          }
-        }
-      }
+            tags: [{ type: 'DISORDER', subType: 'PANIC', text: 'Sudden panic' }],
+          },
+        },
+      },
     ];
 
     const providersPage2 = [
@@ -48,10 +48,10 @@ async function mockGraphql(page: Page) {
         profile: {
           providerInfo: { yearExperience: 11, providerTitle: 'Psychologist' },
           providerTagInfo: {
-            tags: [{ type: 'DISORDER', subType: 'ANXIETY', text: 'Generalised anxiety' }]
-          }
-        }
-      }
+            tags: [{ type: 'DISORDER', subType: 'ANXIETY', text: 'Generalised anxiety' }],
+          },
+        },
+      },
     ];
 
     const payload = {
@@ -61,16 +61,16 @@ async function mockGraphql(page: Page) {
           providers: {
             canLoadMore: pageNum === 1,
             totalSize: 3,
-            providers: pageNum === 1 ? providersPage1 : providersPage2
-          }
-        }
-      }
+            providers: pageNum === 1 ? providersPage1 : providersPage2,
+          },
+        },
+      },
     };
 
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
   });
 }
@@ -95,19 +95,19 @@ async function mockRecordingApis(page: Page) {
       ({
         getTracks: () => [
           {
-            stop: () => {}
-          }
-        ]
+            stop: () => {},
+          },
+        ],
       }) as MediaStream;
 
     Object.defineProperty(navigator, 'mediaDevices', {
       value: { getUserMedia },
-      configurable: true
+      configurable: true,
     });
 
     Object.defineProperty(window, 'MediaRecorder', {
       value: FakeMediaRecorder,
-      configurable: true
+      configurable: true,
     });
   });
 }
@@ -161,7 +161,7 @@ test('upload audio file and restore draft banner', async ({ page }) => {
   await uploadInput.setInputFiles({
     name: 'voice-note.mp3',
     mimeType: 'audio/mpeg',
-    buffer: Buffer.from('fake-audio')
+    buffer: Buffer.from('fake-audio'),
   });
 
   await expect(page.getByTestId('record-audio-player')).toBeVisible();
@@ -174,7 +174,9 @@ test('upload audio file and restore draft banner', async ({ page }) => {
   await expect(page.getByTestId('step-shell-topics')).toBeVisible();
 });
 
-test('refresh during recording shows interruption warning and keeps app stable', async ({ page }) => {
+test('refresh during recording shows interruption warning and keeps app stable', async ({
+  page,
+}) => {
   await mockGraphql(page);
   await mockRecordingApis(page);
   await page.goto('/');
@@ -183,7 +185,9 @@ test('refresh during recording shows interruption warning and keeps app stable',
   await page.getByTestId('record-start-button').click();
   await page.reload();
 
-  await expect(page.getByText('Recording was interrupted. Please review and record again if needed.')).toBeVisible();
+  await expect(
+    page.getByText('Recording was interrupted. Please review and record again if needed.'),
+  ).toBeVisible();
   await expect(page.getByTestId('step-recording')).toBeVisible();
 });
 
@@ -192,7 +196,7 @@ test('indexeddb unavailable shows storage error without crashing', async ({ page
   await page.addInitScript(() => {
     Object.defineProperty(window, 'indexedDB', {
       value: undefined,
-      configurable: true
+      configurable: true,
     });
   });
   await page.goto('/');
@@ -200,6 +204,8 @@ test('indexeddb unavailable shows storage error without crashing', async ({ page
   await page.getByRole('button', { name: 'Enable consent' }).click();
   await page.getByTestId('record-use-demo-audio-button').click();
 
-  await expect(page.getByText('Local audio storage is unavailable in this environment.')).toBeVisible();
+  await expect(
+    page.getByText('Local audio storage is unavailable in this environment.'),
+  ).toBeVisible();
   await expect(page.getByTestId('step-recording')).toBeVisible();
 });

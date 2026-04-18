@@ -23,18 +23,39 @@ export function IntakeSummaryBar() {
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
-        bgcolor: 'background.paper'
+        bgcolor: 'background.paper',
       }}
     >
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} useFlexGap sx={{ alignItems: { md: 'center' } }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={1}
+        useFlexGap
+        sx={{ alignItems: { md: 'center' } }}
+      >
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-          <Chip size="small" color={hasAudio ? 'success' : 'default'} label={hasAudio ? t('summary.audioReady') : t('summary.audioMissing')} />
-          <Chip size="small" color={selectedTopicsCount > 0 ? 'success' : 'default'} label={t('summary.topicsSelected', { count: selectedTopicsCount })} />
-          <Chip size="small" color="secondary" label={t('summary.currentStep', { step: t(`steps.${step}`) })} />
+          <Chip
+            size="small"
+            color={hasAudio ? 'success' : 'default'}
+            label={hasAudio ? t('summary.audioReady') : t('summary.audioMissing')}
+          />
+          <Chip
+            size="small"
+            color={selectedTopicsCount > 0 ? 'success' : 'default'}
+            label={t('summary.topicsSelected', { count: selectedTopicsCount })}
+          />
+          <Chip
+            size="small"
+            color="secondary"
+            label={t('summary.currentStep', { step: t(`steps.${step}`) })}
+          />
         </Stack>
 
         <Stack direction="row" spacing={1} useFlexGap>
-          <UIButton size="small" variant={step === 'record' ? 'contained' : 'outlined'} onClick={() => setStep('record')}>
+          <UIButton
+            size="small"
+            variant={step === 'record' ? 'contained' : 'outlined'}
+            onClick={() => setStep('record')}
+          >
             {t('steps.record')}
           </UIButton>
           <UIButton

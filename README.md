@@ -1,11 +1,13 @@
 # Aepsy React FE Take-home
 
 A monorepo implementation of Aepsy's React FE assignment, focused on:
+
 1. Stable voice capture flow
 2. Topic suggestion and selection
 3. Ranked psychologist search with pagination
 
 ## Demo Flow
+
 1. Record or upload an audio file
 2. Analyze audio with provided `useAudioTranscriber` helper
 3. Select one or more topics
@@ -13,6 +15,7 @@ A monorepo implementation of Aepsy's React FE assignment, focused on:
 5. Refresh or navigate back/forward without losing progress
 
 ## Tech Stack
+
 - Monorepo: `pnpm` workspaces + `turbo`
 - App: Next.js (App Router) + React + TypeScript
 - UI: MUI + shared UI kit in `packages/ui`
@@ -24,6 +27,7 @@ A monorepo implementation of Aepsy's React FE assignment, focused on:
 - Tests: Vitest (unit) + Playwright (e2e + visual)
 
 ## Repository Structure
+
 - `apps/web`: Next.js web application
 - `packages/ui`: shared UI components, form controls, layout primitives, theme/provider
 - `packages/localization`: localization setup and hooks
@@ -33,6 +37,7 @@ A monorepo implementation of Aepsy's React FE assignment, focused on:
 - `docs`: architecture notes and ADR
 
 ## Architecture and Key Decisions
+
 - Feature-first app structure in `apps/web/src/features/*` and shared cross-cutting modules in `apps/web/src/shared/*`.
 - Recorder logic isolated from UI using a small state machine hook: `useAudioRecorderMachine`.
 - Audio persistence optimized for reliability/performance:
@@ -56,6 +61,7 @@ A monorepo implementation of Aepsy's React FE assignment, focused on:
 - All user-facing copy is i18n-key based (no hardcoded text in UI flow).
 
 ## Requirement Fit Checklist
+
 - Step 1 recording: start/stop/playback/re-record/upload ✅
 - Handles permission denied and interruptions without crash ✅
 - Clear separation of UI and recording side effects ✅
@@ -67,6 +73,7 @@ A monorepo implementation of Aepsy's React FE assignment, focused on:
 - Responsive desktop/mobile experience ✅
 
 ## Environment Variables
+
 Create `apps/web/.env.local`:
 
 ```bash
@@ -74,12 +81,14 @@ NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT=https://api-dev.aepsy.com/graphql
 ```
 
 ## Run Locally
+
 ```bash
 pnpm install
 pnpm dev
 ```
 
 ## Quality Checks
+
 ```bash
 pnpm lint
 pnpm typecheck
@@ -89,43 +98,51 @@ pnpm test:visual
 ```
 
 ## Local Git Hooks (Husky)
+
 - `pre-commit`: runs `lint-staged` (auto-fix ESLint/Prettier on staged files)
 - `pre-push`: runs full `pnpm lint` + `pnpm typecheck`
 
 Install hooks automatically after dependency install:
+
 ```bash
 pnpm install
 ```
 
 ## Build and Analyze
+
 ```bash
 pnpm build
 pnpm analyze
 ```
 
 ## Deploy (Vercel)
+
 1. Import repo to Vercel
 2. Set root directory to `apps/web`
 3. Add env var `NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT`
 4. Deploy
 
 ## Trade-offs and Assumptions
+
 - GraphQL endpoint is public and does not require auth for this assignment flow.
 - Provider card rendering prioritizes clarity over heavy UI complexity.
 - Recorder is browser API based; very old browsers may hit `unsupported` path.
 
 ## What I Would Improve With More Time
+
 - Add stronger runtime validation for GraphQL response payloads.
 - Add richer recorder tests (permission denial, interrupted recording, rehydration edge cases).
 - Add accessibility audit pass (focus order, keyboard interactions, ARIA labels).
 - Add optional server proxy/BFF for stricter network control and observability.
 
 ## CI
+
 - `.github/workflows/ci.yml`: lint, typecheck, tests, build, e2e
 - `.github/workflows/visual.yml`: manual visual regression
 - `.github/workflows/security.yml`: dependency review + scheduled audit
 
 ## Team Governance
+
 - CODEOWNERS: [`.github/CODEOWNERS`](.github/CODEOWNERS)
 - PR template: [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md)
 - Architecture guide: [`docs/architecture.md`](docs/architecture.md)

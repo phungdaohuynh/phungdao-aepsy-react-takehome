@@ -8,7 +8,7 @@ import { useUIForm } from '../useUIForm';
 import { z } from '../zod';
 
 const schema = z.object({
-  name: z.string().min(2, 'Name is required')
+  name: z.string().min(2, 'Name is required'),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -17,8 +17,8 @@ function FormFixture() {
   const methods = useUIForm<FormValues>({
     schema,
     defaultValues: {
-      name: ''
-    }
+      name: '',
+    },
   });
 
   return (

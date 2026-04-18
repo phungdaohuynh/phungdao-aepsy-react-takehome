@@ -6,7 +6,7 @@ import { baseConfig } from './base.mjs';
 
 const nextRules = {
   ...nextPlugin.configs.recommended.rules,
-  ...nextPlugin.configs['core-web-vitals'].rules
+  ...nextPlugin.configs['core-web-vitals'].rules,
 };
 
 export const webConfig = [
@@ -14,19 +14,19 @@ export const webConfig = [
   {
     plugins: {
       '@next/next': nextPlugin,
-      'react-hooks': reactHooks
+      'react-hooks': reactHooks,
     },
     rules: {
       ...nextRules,
-      ...reactHooks.configs.recommended.rules
+      ...reactHooks.configs.recommended.rules,
     },
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...globals.node
-      }
-    }
-  }
+        ...globals.node,
+      },
+    },
+  },
 ];
 
 export default webConfig;

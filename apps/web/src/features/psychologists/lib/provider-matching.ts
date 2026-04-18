@@ -19,9 +19,12 @@ export function getProviderMatchReasons(provider: ProviderItem, selectedTopics: 
     return uniqueMatches;
   }
 
-  return selectedTopics
-    .slice(0, 2)
-    .map((topic) => topic.replace(/^U_DIS_/, '').replaceAll('_', ' ').toLowerCase());
+  return selectedTopics.slice(0, 2).map((topic) =>
+    topic
+      .replace(/^U_DIS_/, '')
+      .replaceAll('_', ' ')
+      .toLowerCase(),
+  );
 }
 
 export type ProviderMatchScoreBreakdown = {
@@ -31,9 +34,15 @@ export type ProviderMatchScoreBreakdown = {
   totalScore: number;
 };
 
-export function getProviderMatchScore(provider: ProviderItem, selectedTopics: string[]): ProviderMatchScoreBreakdown {
+export function getProviderMatchScore(
+  provider: ProviderItem,
+  selectedTopics: string[],
+): ProviderMatchScoreBreakdown {
   const matchedTopicsCount = getProviderMatchReasons(provider, selectedTopics).length;
-  const topicMatchScore = Math.min(60, matchedTopicsCount * 20 + (selectedTopics.length > 0 ? 10 : 0));
+  const topicMatchScore = Math.min(
+    60,
+    matchedTopicsCount * 20 + (selectedTopics.length > 0 ? 10 : 0),
+  );
 
   const years = provider.profile?.providerInfo?.yearExperience ?? 0;
   const experienceScore = Math.min(25, Math.round(years * 2.5));
@@ -49,6 +58,6 @@ export function getProviderMatchScore(provider: ProviderItem, selectedTopics: st
     topicMatchScore,
     experienceScore,
     profileCompletenessScore,
-    totalScore
+    totalScore,
   };
 }

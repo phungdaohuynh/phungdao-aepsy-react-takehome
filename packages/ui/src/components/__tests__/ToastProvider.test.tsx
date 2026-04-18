@@ -20,7 +20,7 @@ describe('UIToastProvider', () => {
     render(
       <UIToastProvider>
         <ToastConsumer />
-      </UIToastProvider>
+      </UIToastProvider>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Success' }));
@@ -34,6 +34,8 @@ describe('UIToastProvider', () => {
       return null;
     }
 
-    expect(() => render(<InvalidConsumer />)).toThrow('useUIToast must be used within UIToastProvider');
+    expect(() => render(<InvalidConsumer />)).toThrow(
+      'useUIToast must be used within UIToastProvider',
+    );
   });
 });

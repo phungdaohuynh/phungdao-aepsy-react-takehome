@@ -4,8 +4,8 @@ export function createGraphQLClient(endpoint: string, token?: string) {
   const config = token
     ? {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       }
     : {};
 

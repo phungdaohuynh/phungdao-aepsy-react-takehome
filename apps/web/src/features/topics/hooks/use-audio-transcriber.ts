@@ -17,7 +17,7 @@ export const useAudioTranscriber = () => {
   const [state, setState] = useState<TranscriptionState>({
     isLoading: false,
     data: null,
-    error: null
+    error: null,
   });
 
   const processAudio = async (audioBuffer: ArrayBuffer | Uint8Array) => {
@@ -80,7 +80,7 @@ export const useAudioTranscriber = () => {
         { value: 'U_DIS_FAMILY_HYPERACTIVITY', label: 'Hyperactivity' },
         { value: 'U_DIS_FAMILY_CONCENTRATION_PROBLEM', label: 'Concentration problems' },
         { value: 'U_DIS_SOCIAL_BEHAVIOUR', label: 'Social behavior' },
-        { value: 'U_DIS_OTHER', label: 'Others' }
+        { value: 'U_DIS_OTHER', label: 'Others' },
       ];
 
       setState({ isLoading: false, data: result, error: null });
@@ -88,7 +88,7 @@ export const useAudioTranscriber = () => {
       setState({
         isLoading: false,
         data: null,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   };

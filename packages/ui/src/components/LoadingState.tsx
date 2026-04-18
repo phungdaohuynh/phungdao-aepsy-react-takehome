@@ -17,7 +17,7 @@ export function UILoadingState({ label = 'Loading...', ...props }: UILoadingStat
         alignItems: 'center',
         justifyContent: 'center',
         gap: 1.5,
-        py: 4
+        py: 4,
       }}
       {...props}
     >

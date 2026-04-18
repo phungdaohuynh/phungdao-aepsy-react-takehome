@@ -5,9 +5,12 @@ import { createGraphQLClient } from '@workspace/api-client';
 
 import type {
   SearchProvidersQueryParams,
-  SearchProvidersResponseDto
+  SearchProvidersResponseDto,
 } from '@/features/psychologists/api/dto';
-import { mapSearchProvidersPage, normalizeSearchProvidersNode } from '@/features/psychologists/api/mappers';
+import {
+  mapSearchProvidersPage,
+  normalizeSearchProvidersNode,
+} from '@/features/psychologists/api/mappers';
 import { SEARCH_PROVIDERS } from '@/features/psychologists/api/queries';
 export type { ProviderItem, SearchProvidersPage } from '@/features/psychologists/api/dto';
 
@@ -43,7 +46,11 @@ function withTimeoutAndAbort<T>(promise: Promise<T>, signal: AbortSignal, timeou
   });
 }
 
-export function usePsychologistsQuery({ rawDisorders, endpoint, pageSize = 8 }: SearchProvidersQueryParams) {
+export function usePsychologistsQuery({
+  rawDisorders,
+  endpoint,
+  pageSize = 8,
+}: SearchProvidersQueryParams) {
   return useInfiniteQuery({
     queryKey: ['searchProviders', endpoint, rawDisorders, pageSize],
     initialPageParam: 1,
@@ -62,7 +69,7 @@ export function usePsychologistsQuery({ rawDisorders, endpoint, pageSize = 8 }: 
       const requestPromise = client.request<SearchProvidersResponseDto>(SEARCH_PROVIDERS, {
         pageNum: pageParam,
         pageSize,
-        rawDisorders
+        rawDisorders,
       });
       const response = await withTimeoutAndAbort(requestPromise, signal, 10_000);
 
@@ -75,6 +82,6 @@ export function usePsychologistsQuery({ rawDisorders, endpoint, pageSize = 8 }: 
       }
 
       return lastPage.pageNum + 1;
-    }
+    },
   });
 }

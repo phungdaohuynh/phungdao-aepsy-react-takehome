@@ -15,7 +15,7 @@ describe('UIConfirmDialog', () => {
         description="This action cannot be undone"
         onCancel={onCancel}
         onConfirm={onConfirm}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -33,7 +33,7 @@ describe('UIConfirmDialog', () => {
         onCancel={() => undefined}
         onConfirm={() => undefined}
         confirmLoading
-      />
+      />,
     );
 
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();

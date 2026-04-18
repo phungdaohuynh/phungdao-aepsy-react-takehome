@@ -79,7 +79,11 @@ export function StepShell() {
   return (
     <Container maxWidth="md" sx={{ pt: 2, pb: { xs: 3, md: 4 } }}>
       <Stack spacing={2} data-testid={`step-shell-${step}`}>
-        <Typography variant="body2" component="h1" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+        <Typography
+          variant="body2"
+          component="h1"
+          sx={{ fontWeight: 600, color: 'text.secondary' }}
+        >
           {t('heroTitle')}
         </Typography>
 

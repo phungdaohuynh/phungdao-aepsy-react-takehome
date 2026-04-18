@@ -30,7 +30,7 @@ type RecorderEvent =
 const initialState: RecorderState = {
   status: 'idle',
   error: null,
-  interrupted: false
+  interrupted: false,
 };
 
 const RECORDING_INTERRUPTED_SESSION_KEY = 'aepsy-recording-interrupted';
@@ -41,7 +41,7 @@ function reducer(state: RecorderState, event: RecorderEvent): RecorderState {
       return {
         status: 'unsupported',
         error: 'This browser does not support audio recording.',
-        interrupted: false
+        interrupted: false,
       };
     case 'REQUEST_PERMISSION':
       return { status: 'requesting_permission', error: null, interrupted: false };
@@ -55,7 +55,7 @@ function reducer(state: RecorderState, event: RecorderEvent): RecorderState {
       return {
         status: state.status === 'recording' ? 'stopped' : state.status,
         error: null,
-        interrupted: true
+        interrupted: true,
       };
     case 'ERROR':
       return { status: 'error', error: event.message, interrupted: false };
@@ -115,7 +115,7 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
       onError?.(message);
       clearRecorder();
     },
-    [clearRecorder, onError]
+    [clearRecorder, onError],
   );
 
   const startRecording = useCallback(async () => {
@@ -163,7 +163,7 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
             audioBlob: blob,
             audioMimeType: mimeType,
             audioFileName: `voice-note-${Date.now()}.webm`,
-            sourceType: 'recorded'
+            sourceType: 'recorded',
           });
 
           dispatch({ type: 'STOP_RECORDING' });
@@ -186,12 +186,16 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
       }
 
       if (typedError?.name === 'NotFoundError') {
-        handleError('No microphone device found. Please connect a microphone or upload an audio file.');
+        handleError(
+          'No microphone device found. Please connect a microphone or upload an audio file.',
+        );
         return;
       }
 
       if (typedError?.name === 'NotReadableError') {
-        handleError('Microphone is already in use by another application. Please close that app and try again.');
+        handleError(
+          'Microphone is already in use by another application. Please close that app and try again.',
+        );
         return;
       }
 
@@ -228,7 +232,7 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
           audioBlob: file,
           audioMimeType: file.type || 'audio/mpeg',
           audioFileName: file.name,
-          sourceType: 'uploaded'
+          sourceType: 'uploaded',
         });
 
         dispatch({ type: 'STOP_RECORDING' });
@@ -236,7 +240,7 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
         handleError(normalizeErrorMessage(error, 'Unable to read the selected audio file.'));
       }
     },
-    [handleError, normalizeErrorMessage, onAudioReady]
+    [handleError, normalizeErrorMessage, onAudioReady],
   );
 
   const resetMachine = useCallback(() => {
@@ -250,7 +254,8 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const wasInterrupted = window.sessionStorage.getItem(RECORDING_INTERRUPTED_SESSION_KEY) === '1';
+      const wasInterrupted =
+        window.sessionStorage.getItem(RECORDING_INTERRUPTED_SESSION_KEY) === '1';
       if (wasInterrupted) {
         dispatch({ type: 'INTERRUPTED' });
         window.sessionStorage.removeItem(RECORDING_INTERRUPTED_SESSION_KEY);
@@ -288,7 +293,10 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
     };
   }, [clearRecorder]);
 
-  const canStart = useMemo(() => state.status !== 'recording' && state.status !== 'requesting_permission', [state.status]);
+  const canStart = useMemo(
+    () => state.status !== 'recording' && state.status !== 'requesting_permission',
+    [state.status],
+  );
 
   return {
     state,
@@ -296,6 +304,6 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
     startRecording,
     stopRecording,
     resetMachine,
-    handleAudioUpload
+    handleAudioUpload,
   };
 }

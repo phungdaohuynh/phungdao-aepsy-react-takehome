@@ -7,15 +7,21 @@ const STORE_NAME = 'audio_blobs';
 function normalizeAudioStorageError(error: unknown) {
   if (error instanceof DOMException) {
     if (error.name === 'QuotaExceededError') {
-      return new Error('Local audio storage is full. Please remove some saved recordings and try again.');
+      return new Error(
+        'Local audio storage is full. Please remove some saved recordings and try again.',
+      );
     }
 
     if (error.name === 'SecurityError') {
-      return new Error('Local audio storage is blocked by browser privacy settings. Please allow storage or use another browser mode.');
+      return new Error(
+        'Local audio storage is blocked by browser privacy settings. Please allow storage or use another browser mode.',
+      );
     }
 
     if (error.name === 'InvalidStateError') {
-      return new Error('Local audio storage is temporarily unavailable. Please refresh and try again.');
+      return new Error(
+        'Local audio storage is temporarily unavailable. Please refresh and try again.',
+      );
     }
   }
 
@@ -43,13 +49,14 @@ function openAudioDb(): Promise<IDBDatabase> {
     };
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(normalizeAudioStorageError(request.error ?? new Error('Cannot open IndexedDB.')));
+    request.onerror = () =>
+      reject(normalizeAudioStorageError(request.error ?? new Error('Cannot open IndexedDB.')));
   });
 }
 
 async function withStore<T>(
   mode: IDBTransactionMode,
-  operation: (store: IDBObjectStore) => IDBRequest<T>
+  operation: (store: IDBObjectStore) => IDBRequest<T>,
 ): Promise<T> {
   const database = await openAudioDb();
 
@@ -59,14 +66,17 @@ async function withStore<T>(
     const request = operation(store);
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(normalizeAudioStorageError(request.error ?? new Error('IndexedDB request failed.')));
+    request.onerror = () =>
+      reject(normalizeAudioStorageError(request.error ?? new Error('IndexedDB request failed.')));
 
     transaction.oncomplete = () => {
       database.close();
     };
 
     transaction.onerror = () => {
-      reject(normalizeAudioStorageError(transaction.error ?? new Error('IndexedDB transaction failed.')));
+      reject(
+        normalizeAudioStorageError(transaction.error ?? new Error('IndexedDB transaction failed.')),
+      );
       database.close();
     };
   });

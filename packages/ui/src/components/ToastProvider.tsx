@@ -2,7 +2,14 @@
 
 import Alert, { type AlertColor } from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
-import { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type PropsWithChildren,
+} from 'react';
 
 export type UIToastOptions = {
   message: string;
@@ -37,9 +44,9 @@ export function UIToastProvider({ children }: PropsWithChildren) {
       showSuccess: (message) => showToast({ message, severity: 'success' }),
       showError: (message) => showToast({ message, severity: 'error' }),
       showInfo: (message) => showToast({ message, severity: 'info' }),
-      showWarning: (message) => showToast({ message, severity: 'warning' })
+      showWarning: (message) => showToast({ message, severity: 'warning' }),
     }),
-    [showToast]
+    [showToast],
   );
 
   return (
@@ -51,7 +58,12 @@ export function UIToastProvider({ children }: PropsWithChildren) {
         onClose={closeToast}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={closeToast} severity={toast?.severity ?? 'info'} variant="filled" sx={{ width: '100%' }}>
+        <Alert
+          onClose={closeToast}
+          severity={toast?.severity ?? 'info'}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
           {toast?.message}
         </Alert>
       </Snackbar>

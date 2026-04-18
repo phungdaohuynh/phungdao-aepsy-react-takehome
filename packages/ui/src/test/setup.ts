@@ -10,6 +10,6 @@ Object.defineProperty(globalThis, 'matchMedia', {
     removeListener: () => undefined,
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
-    dispatchEvent: () => false
-  })
+    dispatchEvent: () => false,
+  }),
 });

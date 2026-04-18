@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ProviderItem } from '@/features/psychologists/api/use-psychologists-query';
-import { getProviderMatchReasons, getProviderMatchScore } from '@/features/psychologists/lib/provider-matching';
+import {
+  getProviderMatchReasons,
+  getProviderMatchScore,
+} from '@/features/psychologists/lib/provider-matching';
 
 const baseProvider: ProviderItem = {
   userInfo: { firebaseUid: 'provider-1', avatar: null },
@@ -9,9 +12,9 @@ const baseProvider: ProviderItem = {
   profile: {
     providerInfo: { yearExperience: 4, providerTitle: 'Psychologist' },
     providerTagInfo: {
-      tags: [{ type: 'DISORDER', subType: 'ANXIETY', text: 'Stress' }]
-    }
-  }
+      tags: [{ type: 'DISORDER', subType: 'ANXIETY', text: 'Stress' }],
+    },
+  },
 };
 
 describe('getProviderMatchReasons', () => {

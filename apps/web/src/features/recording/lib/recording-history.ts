@@ -1,7 +1,7 @@
 import {
   RECORDING_HISTORY_MAX_ITEMS,
   RECORDING_HISTORY_MAX_TOTAL_BYTES,
-  RECORDING_HISTORY_TTL_MS
+  RECORDING_HISTORY_TTL_MS,
 } from '@/features/recording/constants/recording';
 import type { RecordingHistoryItem } from '@/shared/state/types';
 
@@ -10,9 +10,12 @@ export function formatSizeMb(sizeBytes: number) {
 }
 
 export function formatShortDate(timestamp: number) {
-  return new Intl.DateTimeFormat('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(
-    new Date(timestamp)
-  );
+  return new Intl.DateTimeFormat('en', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(timestamp));
 }
 
 export function normalizeHistory(entries: RecordingHistoryItem[]) {
@@ -42,10 +45,13 @@ export function applyHistoryPolicy(entries: RecordingHistoryItem[], now: number)
   return { kept, removedKeys };
 }
 
-export function makeHistoryEntry(entry: Omit<RecordingHistoryItem, 'createdAt' | 'expiresAt'>, now: number): RecordingHistoryItem {
+export function makeHistoryEntry(
+  entry: Omit<RecordingHistoryItem, 'createdAt' | 'expiresAt'>,
+  now: number,
+): RecordingHistoryItem {
   return {
     ...entry,
     createdAt: now,
-    expiresAt: now + RECORDING_HISTORY_TTL_MS
+    expiresAt: now + RECORDING_HISTORY_TTL_MS,
   };
 }

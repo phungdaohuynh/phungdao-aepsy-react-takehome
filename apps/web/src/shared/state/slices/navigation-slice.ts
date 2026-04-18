@@ -7,6 +7,6 @@ export const createNavigationSlice: StateCreator<AppState, [], [], NavigationSli
   setStep: (step) =>
     set({
       step,
-      lastUpdatedAt: Date.now()
-    })
+      lastUpdatedAt: Date.now(),
+    }),
 });

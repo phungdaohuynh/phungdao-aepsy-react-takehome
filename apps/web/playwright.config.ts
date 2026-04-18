@@ -7,18 +7,18 @@ export default defineConfig({
   retries: 0,
   use: {
     baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry'
+    trace: 'on-first-retry',
   },
   webServer: {
     command: 'pnpm dev',
     port: 3000,
     reuseExistingServer: true,
-    cwd: '.'
+    cwd: '.',
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
-    }
-  ]
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 });

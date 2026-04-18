@@ -11,12 +11,12 @@ export default [
           patterns: [
             {
               group: ['./*', '../*'],
-              message: 'Use alias imports (`@/`) instead of relative imports in apps/web/src.'
-            }
-          ]
-        }
-      ]
-    }
+              message: 'Use alias imports (`@/`) instead of relative imports in apps/web/src.',
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     files: ['src/features/**/*.{ts,tsx}'],
@@ -27,11 +27,11 @@ export default [
           patterns: [
             {
               group: ['@/layout/*', '@/layout/**', '@/app/*', '@/app/**'],
-              message: 'Feature modules must not depend on app/layout entry layers.'
-            }
-          ]
-        }
-      ]
-    }
-  }
+              message: 'Feature modules must not depend on app/layout entry layers.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];

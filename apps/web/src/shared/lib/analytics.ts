@@ -34,7 +34,7 @@ export function trackEvent(name: AnalyticsEventName, payload?: AnalyticsEvent['p
   const event: AnalyticsEvent = {
     name,
     at: new Date().toISOString(),
-    ...(payload ? { payload } : {})
+    ...(payload ? { payload } : {}),
   };
 
   try {

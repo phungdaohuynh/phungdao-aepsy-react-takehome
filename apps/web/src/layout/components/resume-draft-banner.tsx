@@ -17,7 +17,7 @@ function formatLastSaved(value: number | null) {
     minute: '2-digit',
     second: '2-digit',
     day: '2-digit',
-    month: 'short'
+    month: 'short',
   });
 
   return formatter.format(new Date(value));
@@ -35,7 +35,8 @@ export function ResumeDraftBanner() {
   const reset = useAppStore((state) => state.reset);
 
   const shouldShow =
-    hasHydrated && (step !== 'record' || Boolean(audioDataUrl || audioStorageKey) || selectedTopicsCount > 0);
+    hasHydrated &&
+    (step !== 'record' || Boolean(audioDataUrl || audioStorageKey) || selectedTopicsCount > 0);
 
   const label = useMemo(() => formatLastSaved(lastUpdatedAt), [lastUpdatedAt]);
 

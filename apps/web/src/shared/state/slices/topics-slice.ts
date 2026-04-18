@@ -16,7 +16,7 @@ export const createTopicsSlice: StateCreator<AppState, [], [], TopicsSlice> = (s
       selectedTopics: topics,
       selectedTopicsPast: nextHistory(state.selectedTopicsPast, state.selectedTopics),
       selectedTopicsFuture: [],
-      lastUpdatedAt: Date.now()
+      lastUpdatedAt: Date.now(),
     })),
   toggleTopic: (topic) =>
     set((state) => ({
@@ -25,14 +25,17 @@ export const createTopicsSlice: StateCreator<AppState, [], [], TopicsSlice> = (s
         : [...state.selectedTopics, topic],
       selectedTopicsPast: nextHistory(state.selectedTopicsPast, state.selectedTopics),
       selectedTopicsFuture: [],
-      lastUpdatedAt: Date.now()
+      lastUpdatedAt: Date.now(),
     })),
   clearSelectedTopics: () =>
     set((state) => ({
       selectedTopics: [],
-      selectedTopicsPast: state.selectedTopics.length > 0 ? nextHistory(state.selectedTopicsPast, state.selectedTopics) : state.selectedTopicsPast,
+      selectedTopicsPast:
+        state.selectedTopics.length > 0
+          ? nextHistory(state.selectedTopicsPast, state.selectedTopics)
+          : state.selectedTopicsPast,
       selectedTopicsFuture: [],
-      lastUpdatedAt: Date.now()
+      lastUpdatedAt: Date.now(),
     })),
   undoTopicSelection: () => {
     const { selectedTopicsPast, selectedTopics, selectedTopicsFuture } = get();
@@ -45,8 +48,11 @@ export const createTopicsSlice: StateCreator<AppState, [], [], TopicsSlice> = (s
     set({
       selectedTopics: previous,
       selectedTopicsPast: selectedTopicsPast.slice(0, -1),
-      selectedTopicsFuture: [selectedTopics, ...selectedTopicsFuture].slice(0, TOPICS_HISTORY_MAX_ITEMS),
-      lastUpdatedAt: Date.now()
+      selectedTopicsFuture: [selectedTopics, ...selectedTopicsFuture].slice(
+        0,
+        TOPICS_HISTORY_MAX_ITEMS,
+      ),
+      lastUpdatedAt: Date.now(),
     });
   },
   redoTopicSelection: () => {
@@ -61,7 +67,7 @@ export const createTopicsSlice: StateCreator<AppState, [], [], TopicsSlice> = (s
       selectedTopics: next,
       selectedTopicsPast: nextHistory(selectedTopicsPast, selectedTopics),
       selectedTopicsFuture: selectedTopicsFuture.slice(1),
-      lastUpdatedAt: Date.now()
+      lastUpdatedAt: Date.now(),
     });
-  }
+  },
 });

@@ -29,7 +29,7 @@ export function LanguageSwitcher() {
             height: 18,
             display: 'block',
             objectFit: 'cover',
-            borderRadius: 0.5
+            borderRadius: 0.5,
           }}
         />
       </IconButton>
@@ -60,7 +60,7 @@ export function LanguageSwitcher() {
                 height: 18,
                 display: 'block',
                 objectFit: 'cover',
-                borderRadius: 0.5
+                borderRadius: 0.5,
               }}
             />
           </MenuItem>

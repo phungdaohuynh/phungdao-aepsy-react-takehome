@@ -25,9 +25,9 @@ async function mockGraphql(page: Page) {
                 profile: {
                   providerInfo: { yearExperience: 8, providerTitle: 'Clinical Psychologist' },
                   providerTagInfo: {
-                    tags: [{ type: 'DISORDER', subType: 'ANXIETY', text: 'Stress' }]
-                  }
-                }
+                    tags: [{ type: 'DISORDER', subType: 'ANXIETY', text: 'Stress' }],
+                  },
+                },
               },
               {
                 userInfo: { firebaseUid: 'provider-2', avatar: null },
@@ -35,20 +35,20 @@ async function mockGraphql(page: Page) {
                 profile: {
                   providerInfo: { yearExperience: 11, providerTitle: 'Psychologist' },
                   providerTagInfo: {
-                    tags: [{ type: 'DISORDER', subType: 'PANIC', text: 'Sudden panic' }]
-                  }
-                }
-              }
-            ]
-          }
-        }
-      }
+                    tags: [{ type: 'DISORDER', subType: 'PANIC', text: 'Sudden panic' }],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
     };
 
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
   });
 }
@@ -63,14 +63,17 @@ test.describe('visual snapshots', () => {
           transition-duration: 0s !important;
           caret-color: transparent !important;
         }
-      `
+      `,
     });
   });
 
   test('step 1 visual', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByTestId('step-shell-record')).toBeVisible();
-    await expect(page).toHaveScreenshot('step-1-recording.png', { fullPage: true, maxDiffPixelRatio: 0.02 });
+    await expect(page).toHaveScreenshot('step-1-recording.png', {
+      fullPage: true,
+      maxDiffPixelRatio: 0.02,
+    });
   });
 
   test('step 3 visual', async ({ page }) => {
@@ -81,6 +84,9 @@ test.describe('visual snapshots', () => {
     await page.getByTestId('topics-continue-button').click();
 
     await expect(page.getByTestId('step-shell-psychologists')).toBeVisible();
-    await expect(page).toHaveScreenshot('step-3-psychologists.png', { fullPage: true, maxDiffPixelRatio: 0.02 });
+    await expect(page).toHaveScreenshot('step-3-psychologists.png', {
+      fullPage: true,
+      maxDiffPixelRatio: 0.02,
+    });
   });
 });

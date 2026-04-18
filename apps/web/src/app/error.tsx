@@ -5,7 +5,7 @@ import { Alert, Box, UIButton, Container, Stack, Typography } from '@workspace/u
 
 export default function GlobalError({
   error,
-  reset
+  reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;

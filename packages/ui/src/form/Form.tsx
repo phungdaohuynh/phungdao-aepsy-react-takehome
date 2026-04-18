@@ -1,7 +1,12 @@
 'use client';
 
 import type { PropsWithChildren } from 'react';
-import { FormProvider, type FieldValues, type SubmitHandler, type UseFormReturn } from 'react-hook-form';
+import {
+  FormProvider,
+  type FieldValues,
+  type SubmitHandler,
+  type UseFormReturn,
+} from 'react-hook-form';
 
 type UIFormProps<TFieldValues extends FieldValues> = PropsWithChildren<{
   methods: UseFormReturn<TFieldValues>;
@@ -13,7 +18,7 @@ export function UIForm<TFieldValues extends FieldValues>({
   methods,
   onSubmit,
   id,
-  children
+  children,
 }: UIFormProps<TFieldValues>) {
   return (
     <FormProvider {...methods}>

@@ -14,10 +14,13 @@ import {
   UIButton,
   UILoadingState,
   UISectionCard,
-  useUIToast
+  useUIToast,
 } from '@workspace/ui';
 
-import { TOPIC_FILTER_GROUPS, type TopicFilterKey } from '@/features/topics/constants/topic-filters';
+import {
+  TOPIC_FILTER_GROUPS,
+  type TopicFilterKey,
+} from '@/features/topics/constants/topic-filters';
 import { useAudioTranscriber } from '@/features/topics/hooks/use-audio-transcriber';
 import { trackEvent } from '@/shared/lib/analytics';
 import { getAudioBlob } from '@/shared/lib/audio-storage';
@@ -28,7 +31,10 @@ async function audioDataUrlToArrayBuffer(audioDataUrl: string) {
   return await response.arrayBuffer();
 }
 
-async function resolveAudioArrayBuffer(audioDataUrl: string | null, audioStorageKey: string | null) {
+async function resolveAudioArrayBuffer(
+  audioDataUrl: string | null,
+  audioStorageKey: string | null,
+) {
   if (audioStorageKey) {
     const blob = await getAudioBlob(audioStorageKey);
     if (blob) {
@@ -80,7 +86,12 @@ export function StepTopics() {
   }, [audioDataUrl, audioStorageKey, t, toast, transcriber]);
 
   useEffect(() => {
-    if ((!audioDataUrl && !audioStorageKey) || hasAutoProcessedRef.current || transcriber.data || transcriber.isLoading) {
+    if (
+      (!audioDataUrl && !audioStorageKey) ||
+      hasAutoProcessedRef.current ||
+      transcriber.data ||
+      transcriber.isLoading
+    ) {
       return;
     }
 
@@ -98,7 +109,8 @@ export function StepTopics() {
 
   const filteredTopics = useMemo(() => {
     const normalizedQuery = topicQuery.trim().toLowerCase();
-    const groupConfig = TOPIC_FILTER_GROUPS.find((item) => item.key === activeFilterGroup) ?? TOPIC_FILTER_GROUPS[0];
+    const groupConfig =
+      TOPIC_FILTER_GROUPS.find((item) => item.key === activeFilterGroup) ?? TOPIC_FILTER_GROUPS[0];
 
     return sortedTopics.filter((topic) => {
       const matchesGroup = groupConfig.matcher(topic.value);
@@ -180,7 +192,13 @@ export function StepTopics() {
             </Stack>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap>
-              <Tooltip title={selectedTopicsPast.length === 0 ? t('topics.tooltips.noUndoHistory') : t('topics.tooltips.undo')}>
+              <Tooltip
+                title={
+                  selectedTopicsPast.length === 0
+                    ? t('topics.tooltips.noUndoHistory')
+                    : t('topics.tooltips.undo')
+                }
+              >
                 <span>
                   <UIButton
                     variant="outlined"
@@ -195,7 +213,13 @@ export function StepTopics() {
                   </UIButton>
                 </span>
               </Tooltip>
-              <Tooltip title={selectedTopicsFuture.length === 0 ? t('topics.tooltips.noRedoHistory') : t('topics.tooltips.redo')}>
+              <Tooltip
+                title={
+                  selectedTopicsFuture.length === 0
+                    ? t('topics.tooltips.noRedoHistory')
+                    : t('topics.tooltips.redo')
+                }
+              >
                 <span>
                   <UIButton
                     variant="outlined"
@@ -229,7 +253,7 @@ export function StepTopics() {
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {filteredTopics.map((topic, index) => {
                 const isSelected = selectedTopics.includes(topic.value);
-                const confidence = 0.68 + ((index % 7) * 0.04);
+                const confidence = 0.68 + (index % 7) * 0.04;
 
                 return (
                   <Chip
@@ -248,7 +272,9 @@ export function StepTopics() {
               })}
             </Box>
 
-            {filteredTopics.length === 0 ? <Alert severity="info">{t('topics.noFilteredResult')}</Alert> : null}
+            {filteredTopics.length === 0 ? (
+              <Alert severity="info">{t('topics.noFilteredResult')}</Alert>
+            ) : null}
           </>
         ) : null}
 
@@ -261,15 +287,25 @@ export function StepTopics() {
             alignItems: 'center',
             position: { xs: 'sticky', md: 'static' },
             bottom: { xs: 12, md: 'auto' },
-            zIndex: 5
+            zIndex: 5,
           }}
         >
           <UIButton variant="outlined" onClick={() => setStep('record')}>
             {t('common.back')}
           </UIButton>
-          <Tooltip title={selectedCount === 0 ? t('topics.tooltips.selectAtLeastOne') : t('topics.tooltips.continue')}>
+          <Tooltip
+            title={
+              selectedCount === 0
+                ? t('topics.tooltips.selectAtLeastOne')
+                : t('topics.tooltips.continue')
+            }
+          >
             <span>
-              <UIButton disabled={selectedCount === 0} onClick={() => setStep('psychologists')} data-testid="topics-continue-button">
+              <UIButton
+                disabled={selectedCount === 0}
+                onClick={() => setStep('psychologists')}
+                data-testid="topics-continue-button"
+              >
                 {t('topics.actions.continue')}
               </UIButton>
             </span>

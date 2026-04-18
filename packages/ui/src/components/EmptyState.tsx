@@ -23,7 +23,7 @@ export function UIEmptyState({ title, description, action }: UIEmptyStateProps) 
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
-        alignItems: 'center'
+        alignItems: 'center',
       }}
     >
       <Typography variant="h6">{title}</Typography>
