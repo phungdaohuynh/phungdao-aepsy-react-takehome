@@ -4,8 +4,35 @@ const DB_NAME = 'aepsy-audio-db';
 const DB_VERSION = 1;
 const STORE_NAME = 'audio_blobs';
 
+function normalizeAudioStorageError(error: unknown) {
+  if (error instanceof DOMException) {
+    if (error.name === 'QuotaExceededError') {
+      return new Error('Local audio storage is full. Please remove some saved recordings and try again.');
+    }
+
+    if (error.name === 'SecurityError') {
+      return new Error('Local audio storage is blocked by browser privacy settings. Please allow storage or use another browser mode.');
+    }
+
+    if (error.name === 'InvalidStateError') {
+      return new Error('Local audio storage is temporarily unavailable. Please refresh and try again.');
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error;
+  }
+
+  return new Error('Local audio storage is unavailable.');
+}
+
 function openAudioDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      reject(new Error('Local audio storage is unavailable in this environment.'));
+      return;
+    }
+
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onupgradeneeded = () => {
@@ -16,7 +43,7 @@ function openAudioDb(): Promise<IDBDatabase> {
     };
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('Cannot open IndexedDB.'));
+    request.onerror = () => reject(normalizeAudioStorageError(request.error ?? new Error('Cannot open IndexedDB.')));
   });
 }
 
@@ -32,14 +59,14 @@ async function withStore<T>(
     const request = operation(store);
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed.'));
+    request.onerror = () => reject(normalizeAudioStorageError(request.error ?? new Error('IndexedDB request failed.')));
 
     transaction.oncomplete = () => {
       database.close();
     };
 
     transaction.onerror = () => {
-      reject(transaction.error ?? new Error('IndexedDB transaction failed.'));
+      reject(normalizeAudioStorageError(transaction.error ?? new Error('IndexedDB transaction failed.')));
       database.close();
     };
   });
@@ -47,17 +74,25 @@ async function withStore<T>(
 
 export async function saveAudioBlob(blob: Blob, key?: string) {
   const audioStorageKey = key ?? `audio-${Date.now()}`;
-  await withStore('readwrite', (store) => store.put(blob, audioStorageKey));
+  try {
+    await withStore('readwrite', (store) => store.put(blob, audioStorageKey));
+  } catch (error) {
+    throw normalizeAudioStorageError(error);
+  }
   return audioStorageKey;
 }
 
 export async function getAudioBlob(key: string) {
-  const blob = await withStore('readonly', (store) => store.get(key));
+  const blob = await withStore('readonly', (store) => store.get(key)).catch((error) => {
+    throw normalizeAudioStorageError(error);
+  });
   return blob instanceof Blob ? blob : null;
 }
 
 export async function deleteAudioBlob(key: string) {
-  await withStore('readwrite', (store) => store.delete(key));
+  await withStore('readwrite', (store) => store.delete(key)).catch((error) => {
+    throw normalizeAudioStorageError(error);
+  });
 }
 
 export async function deleteAudioBlobs(keys: string[]) {

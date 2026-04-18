@@ -48,6 +48,8 @@
     "description": "The recorder handles permission denial, tab interruption, and re-record flows to keep state stable.",
     "uploadPolicy": "Small files are handled instantly up to {{smallMb}} MB. Larger files run local worker processing up to {{largeMb}} MB.",
     "interrupted": "Recording was interrupted. Please review and record again if needed.",
+    "notSavedUntilStopped": "Recording is not saved until you press Stop.",
+    "largeUploadInterruptedAfterRefresh": "Large-file processing was interrupted by refresh. Please upload the file again to continue.",
     "noAudio": "No audio yet. Record or upload a file to continue.",
     "restoringPreview": "Restoring your saved audio preview...",
     "sourcePrefix": "Source:",
@@ -113,6 +115,7 @@
       "cancel": "Cancel"
     },
     "toast": {
+      "operationFailed": "Action failed. Please try again.",
       "uploadedSuccess": "Audio file uploaded successfully.",
       "recordedSuccess": "Voice note recorded successfully.",
       "invalidAudio": "Please upload a valid audio file.",

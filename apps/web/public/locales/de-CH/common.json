@@ -48,6 +48,8 @@
     "description": "Der Recorder behandelt verweigerte Berechtigungen, Tab-Unterbrechungen und erneute Aufnahmen stabil.",
     "uploadPolicy": "Kleine Dateien werden bis {{smallMb}} MB direkt verarbeitet. Größere Dateien laufen lokal im Worker bis {{largeMb}} MB.",
     "interrupted": "Die Aufnahme wurde unterbrochen. Bitte prüfe sie und nimm bei Bedarf erneut auf.",
+    "notSavedUntilStopped": "Die Aufnahme wird erst gespeichert, wenn du auf Stop klickst.",
+    "largeUploadInterruptedAfterRefresh": "Die Verarbeitung großer Dateien wurde durch ein Neuladen unterbrochen. Bitte lade die Datei erneut hoch.",
     "noAudio": "Noch kein Audio. Nimm auf oder lade eine Datei hoch, um fortzufahren.",
     "restoringPreview": "Gespeicherte Audio-Vorschau wird wiederhergestellt...",
     "sourcePrefix": "Quelle:",
@@ -113,6 +115,7 @@
       "cancel": "Abbrechen"
     },
     "toast": {
+      "operationFailed": "Aktion fehlgeschlagen. Bitte erneut versuchen.",
       "uploadedSuccess": "Audiodatei erfolgreich hochgeladen.",
       "recordedSuccess": "Sprachnotiz erfolgreich aufgenommen.",
       "invalidAudio": "Bitte lade eine gültige Audiodatei hoch.",

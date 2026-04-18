@@ -33,6 +33,8 @@ const initialState: RecorderState = {
   interrupted: false
 };
 
+const RECORDING_INTERRUPTED_SESSION_KEY = 'aepsy-recording-interrupted';
+
 function reducer(state: RecorderState, event: RecorderEvent): RecorderState {
   switch (event.type) {
     case 'UNSUPPORTED':
@@ -82,6 +84,14 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const interruptionRef = useRef(false);
+
+  const normalizeErrorMessage = useCallback((error: unknown, fallback: string) => {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+    return fallback;
+  }, []);
 
   const stopStreamTracks = useCallback(() => {
     if (streamRef.current) {
@@ -95,6 +105,7 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
   const clearRecorder = useCallback(() => {
     mediaRecorderRef.current = null;
     chunksRef.current = [];
+    interruptionRef.current = false;
     stopStreamTracks();
   }, [stopStreamTracks]);
 
@@ -139,6 +150,11 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
           const blob = new Blob(chunksRef.current, { type: mimeType });
 
           if (!blob.size) {
+            if (interruptionRef.current) {
+              dispatch({ type: 'STOP_RECORDING' });
+              clearRecorder();
+              return;
+            }
             handleError('No audio captured. Please try recording again.');
             return;
           }
@@ -152,8 +168,9 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
 
           dispatch({ type: 'STOP_RECORDING' });
           clearRecorder();
-        } catch {
-          handleError('Unable to process recorded audio.');
+        } catch (error) {
+          const message = normalizeErrorMessage(error, 'Unable to process recorded audio.');
+          handleError(message);
         }
       });
 
@@ -168,9 +185,29 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
         return;
       }
 
+      if (typedError?.name === 'NotFoundError') {
+        handleError('No microphone device found. Please connect a microphone or upload an audio file.');
+        return;
+      }
+
+      if (typedError?.name === 'NotReadableError') {
+        handleError('Microphone is already in use by another application. Please close that app and try again.');
+        return;
+      }
+
+      if (typedError?.name === 'SecurityError') {
+        handleError('Microphone access is blocked by browser security settings.');
+        return;
+      }
+
+      if (typedError?.name === 'AbortError') {
+        handleError('Microphone initialization was interrupted. Please try again.');
+        return;
+      }
+
       handleError('Unable to start recording. Please check your microphone settings.');
     }
-  }, [clearRecorder, handleError, onAudioReady]);
+  }, [clearRecorder, handleError, normalizeErrorMessage, onAudioReady]);
 
   const stopRecording = useCallback(() => {
     const recorder = mediaRecorderRef.current;
@@ -195,11 +232,11 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
         });
 
         dispatch({ type: 'STOP_RECORDING' });
-      } catch {
-        handleError('Unable to read the selected audio file.');
+      } catch (error) {
+        handleError(normalizeErrorMessage(error, 'Unable to read the selected audio file.'));
       }
     },
-    [handleError, onAudioReady]
+    [handleError, normalizeErrorMessage, onAudioReady]
   );
 
   const resetMachine = useCallback(() => {
@@ -212,15 +249,26 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
   }, [clearRecorder]);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const wasInterrupted = window.sessionStorage.getItem(RECORDING_INTERRUPTED_SESSION_KEY) === '1';
+      if (wasInterrupted) {
+        dispatch({ type: 'INTERRUPTED' });
+        window.sessionStorage.removeItem(RECORDING_INTERRUPTED_SESSION_KEY);
+      }
+    }
+
     const onVisibilityChange = () => {
       if (document.hidden && mediaRecorderRef.current?.state === 'recording') {
-        mediaRecorderRef.current.stop();
+        interruptionRef.current = true;
         dispatch({ type: 'INTERRUPTED' });
+        mediaRecorderRef.current.stop();
       }
     };
 
     const onBeforeUnload = () => {
       if (mediaRecorderRef.current?.state === 'recording') {
+        interruptionRef.current = true;
+        window.sessionStorage.setItem(RECORDING_INTERRUPTED_SESSION_KEY, '1');
         mediaRecorderRef.current.stop();
       }
     };

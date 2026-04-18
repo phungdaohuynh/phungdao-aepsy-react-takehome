@@ -43,6 +43,19 @@ export function StepRecording() {
   const [hasConsent, setHasConsent] = useState(false);
   const [activePromptIndex, setActivePromptIndex] = useState(0);
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const LARGE_UPLOAD_IN_PROGRESS_SESSION_KEY = 'aepsy-large-upload-in-progress';
+  const [showLargeUploadInterruptionWarning, setShowLargeUploadInterruptionWarning] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const wasInProgress = window.sessionStorage.getItem(LARGE_UPLOAD_IN_PROGRESS_SESSION_KEY) === '1';
+    if (wasInProgress) {
+      window.sessionStorage.removeItem(LARGE_UPLOAD_IN_PROGRESS_SESSION_KEY);
+    }
+
+    return wasInProgress;
+  });
 
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
   const audioStorageKey = useAppStore((state) => state.audioStorageKey);
@@ -63,6 +76,19 @@ export function StepRecording() {
     () => [t('recording.prompts.prompt1'), t('recording.prompts.prompt2'), t('recording.prompts.prompt3')],
     [t]
   );
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const isInProgress = largeUpload.state.status === 'uploading' || largeUpload.state.status === 'paused';
+    if (isInProgress) {
+      window.sessionStorage.setItem(LARGE_UPLOAD_IN_PROGRESS_SESSION_KEY, '1');
+      return;
+    }
+
+    window.sessionStorage.removeItem(LARGE_UPLOAD_IN_PROGRESS_SESSION_KEY);
+  }, [largeUpload.state.status]);
 
   const enforceHistoryPolicy = async (nextEntries: RecordingHistoryItem[]) => {
     const now = Date.now();
@@ -149,6 +175,14 @@ export function StepRecording() {
     fileInputRef.current?.click();
   };
 
+  const toErrorMessage = (error: unknown, fallbackKey = 'recording.toast.operationFailed') => {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    return t(fallbackKey);
+  };
+
   const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -161,11 +195,13 @@ export function StepRecording() {
 
     if (!isAudioByMime && !isAudioByName) {
       toast.showError(t('recording.toast.invalidAudio'));
+      event.target.value = '';
       return;
     }
 
     if (file.size > VERY_LARGE_UPLOAD_MAX_BYTES) {
       toast.showError(t('recording.toast.tooLargeForLongUpload'));
+      event.target.value = '';
       return;
     }
 
@@ -213,105 +249,144 @@ export function StepRecording() {
         audioSourceType: 'uploaded',
         sizeBytes: file.size
       });
-    } catch {
-      toast.showError(t('recording.toast.longUploadFailed'));
+    } catch (error) {
+      toast.showError(toErrorMessage(error, 'recording.toast.longUploadFailed'));
     }
 
     event.target.value = '';
   };
 
   const onReRecord = async () => {
-    if (audioDataUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(audioDataUrl);
-    }
+    try {
+      if (audioDataUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(audioDataUrl);
+      }
 
-    recorder.resetMachine();
-    largeUpload.reset();
-    clearAudioPayload();
-    clearSelectedTopics();
-    toast.showInfo(t('recording.toast.cleared'));
+      recorder.resetMachine();
+      largeUpload.reset();
+      clearAudioPayload();
+      clearSelectedTopics();
+      toast.showInfo(t('recording.toast.cleared'));
+    } catch (error) {
+      toast.showError(toErrorMessage(error));
+    }
   };
 
   const onUseDemoAudio = async () => {
-    if (audioStorageKey) {
-      await deleteAudioBlob(audioStorageKey);
-      removeRecordingHistoryEntry(audioStorageKey);
+    try {
+      if (audioStorageKey) {
+        await deleteAudioBlob(audioStorageKey);
+        removeRecordingHistoryEntry(audioStorageKey);
+      }
+
+      if (audioDataUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(audioDataUrl);
+      }
+
+      const demoBlob = new Blob(['demo-audio'], { type: 'audio/webm' });
+      const nextAudioStorageKey = await saveAudioBlob(demoBlob);
+
+      clearSelectedTopics();
+      largeUpload.reset();
+      setAudioPayload({
+        audioDataUrl: URL.createObjectURL(demoBlob),
+        audioStorageKey: nextAudioStorageKey,
+        audioMimeType: 'audio/webm',
+        audioFileName: 'demo-audio.webm',
+        audioSourceType: 'uploaded'
+      });
+      toast.showInfo(t('recording.toast.demoLoaded'));
+    } catch (error) {
+      toast.showError(toErrorMessage(error));
     }
-
-    if (audioDataUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(audioDataUrl);
-    }
-
-    const demoBlob = new Blob(['demo-audio'], { type: 'audio/webm' });
-    const nextAudioStorageKey = await saveAudioBlob(demoBlob);
-
-    clearSelectedTopics();
-    largeUpload.reset();
-    setAudioPayload({
-      audioDataUrl: URL.createObjectURL(demoBlob),
-      audioStorageKey: nextAudioStorageKey,
-      audioMimeType: 'audio/webm',
-      audioFileName: 'demo-audio.webm',
-      audioSourceType: 'uploaded'
-    });
-    toast.showInfo(t('recording.toast.demoLoaded'));
   };
 
   const onDeleteAudioNow = async () => {
-    if (audioStorageKey) {
-      await deleteAudioBlob(audioStorageKey);
-    }
+    try {
+      if (audioStorageKey) {
+        await deleteAudioBlob(audioStorageKey);
+      }
 
-    if (audioDataUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(audioDataUrl);
-    }
+      if (audioDataUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(audioDataUrl);
+      }
 
-    recorder.resetMachine();
-    largeUpload.reset();
-    clearAudioPayload();
-    clearSelectedTopics();
-    trackEvent('audio_deleted', { source: audioSourceType ?? 'unknown' });
-    toast.showInfo(t('recording.toast.audioDeleted'));
+      recorder.resetMachine();
+      largeUpload.reset();
+      clearAudioPayload();
+      clearSelectedTopics();
+      trackEvent('audio_deleted', { source: audioSourceType ?? 'unknown' });
+      toast.showInfo(t('recording.toast.audioDeleted'));
+    } catch (error) {
+      toast.showError(toErrorMessage(error));
+    }
+  };
+
+  const onRemoveHistoryItem = async (entry: RecordingHistoryItem) => {
+    try {
+      await deleteAudioBlob(entry.audioStorageKey);
+      removeRecordingHistoryEntry(entry.audioStorageKey);
+
+      if (audioStorageKey === entry.audioStorageKey) {
+        if (audioDataUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(audioDataUrl);
+        }
+        recorder.resetMachine();
+        largeUpload.reset();
+        clearAudioPayload();
+        clearSelectedTopics();
+      }
+    } catch (error) {
+      toast.showError(toErrorMessage(error));
+    }
   };
 
   const onRestoreHistoryItem = async (entry: RecordingHistoryItem) => {
-    const blob = await getAudioBlob(entry.audioStorageKey);
+    try {
+      const blob = await getAudioBlob(entry.audioStorageKey);
 
-    if (!blob) {
-      removeRecordingHistoryEntry(entry.audioStorageKey);
-      toast.showError(t('recording.toast.historyMissing'));
-      return;
+      if (!blob) {
+        removeRecordingHistoryEntry(entry.audioStorageKey);
+        toast.showError(t('recording.toast.historyMissing'));
+        return;
+      }
+
+      if (audioDataUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(audioDataUrl);
+      }
+
+      const previewUrl = URL.createObjectURL(blob);
+      clearSelectedTopics();
+      setAudioPayload({
+        audioDataUrl: previewUrl,
+        audioStorageKey: entry.audioStorageKey,
+        audioMimeType: entry.audioMimeType,
+        audioFileName: entry.audioFileName,
+        audioSourceType: entry.audioSourceType
+      });
+
+      trackEvent('history_restored', { source: entry.audioSourceType });
+      toast.showSuccess(t('recording.toast.historyRestored'));
+    } catch (error) {
+      toast.showError(toErrorMessage(error));
     }
-
-    if (audioDataUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(audioDataUrl);
-    }
-
-    const previewUrl = URL.createObjectURL(blob);
-    clearSelectedTopics();
-    setAudioPayload({
-      audioDataUrl: previewUrl,
-      audioStorageKey: entry.audioStorageKey,
-      audioMimeType: entry.audioMimeType,
-      audioFileName: entry.audioFileName,
-      audioSourceType: entry.audioSourceType
-    });
-
-    trackEvent('history_restored', { source: entry.audioSourceType });
-    toast.showSuccess(t('recording.toast.historyRestored'));
   };
 
   const onClearAllHistory = async () => {
-    const allKeys = recordingHistory.map((item) => item.audioStorageKey);
-    await deleteAudioBlobs(allKeys);
-    clearRecordingHistory();
+    try {
+      const allKeys = recordingHistory.map((item) => item.audioStorageKey);
+      await deleteAudioBlobs(allKeys);
+      clearRecordingHistory();
 
-    if (audioStorageKey && allKeys.includes(audioStorageKey)) {
-      clearAudioPayload();
+      if (audioStorageKey && allKeys.includes(audioStorageKey)) {
+        clearAudioPayload();
+      }
+
+      trackEvent('history_cleared', { count: allKeys.length });
+      toast.showInfo(t('recording.toast.historyCleared'));
+    } catch (error) {
+      toast.showError(toErrorMessage(error));
     }
-
-    trackEvent('history_cleared', { count: allKeys.length });
-    toast.showInfo(t('recording.toast.historyCleared'));
   };
 
   return (
@@ -377,6 +452,21 @@ export function StepRecording() {
           <Alert severity="warning">{t('recording.interrupted')}</Alert>
         ) : null}
 
+        {recorder.state.status === 'recording' ? (
+          <Alert severity="warning">{t('recording.notSavedUntilStopped')}</Alert>
+        ) : null}
+
+        {showLargeUploadInterruptionWarning ? (
+          <Alert
+            severity="warning"
+            onClose={() => {
+              setShowLargeUploadInterruptionWarning(false);
+            }}
+          >
+            {t('recording.largeUploadInterruptedAfterRefresh')}
+          </Alert>
+        ) : null}
+
         {recordingHistory.length > 0 ? (
           <UISectionCard
             title={t('recording.history.title')}
@@ -410,10 +500,7 @@ export function StepRecording() {
                         size="small"
                         variant="text"
                         color="error"
-                        onClick={() => {
-                          void deleteAudioBlob(entry.audioStorageKey);
-                          removeRecordingHistoryEntry(entry.audioStorageKey);
-                        }}
+                        onClick={() => void onRemoveHistoryItem(entry)}
                       >
                         {t('recording.history.remove')}
                       </UIButton>

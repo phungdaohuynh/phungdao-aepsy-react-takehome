@@ -75,6 +75,43 @@ async function mockGraphql(page: Page) {
   });
 }
 
+async function mockRecordingApis(page: Page) {
+  await page.addInitScript(() => {
+    class FakeMediaRecorder extends EventTarget {
+      public state: 'inactive' | 'recording' = 'inactive';
+      public mimeType = 'audio/webm';
+
+      start() {
+        this.state = 'recording';
+      }
+
+      stop() {
+        this.state = 'inactive';
+        this.dispatchEvent(new Event('stop'));
+      }
+    }
+
+    const getUserMedia = async () =>
+      ({
+        getTracks: () => [
+          {
+            stop: () => {}
+          }
+        ]
+      }) as MediaStream;
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      value: { getUserMedia },
+      configurable: true
+    });
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      value: FakeMediaRecorder,
+      configurable: true
+    });
+  });
+}
+
 test('happy path: step 1 -> step 2 -> step 3 with load more', async ({ page }) => {
   await mockGraphql(page);
   await page.goto('/');
@@ -135,4 +172,34 @@ test('upload audio file and restore draft banner', async ({ page }) => {
 
   await expect(page.getByTestId('resume-draft-banner')).toBeVisible();
   await expect(page.getByTestId('step-shell-topics')).toBeVisible();
+});
+
+test('refresh during recording shows interruption warning and keeps app stable', async ({ page }) => {
+  await mockGraphql(page);
+  await mockRecordingApis(page);
+  await page.goto('/');
+
+  await page.getByRole('button', { name: 'Enable consent' }).click();
+  await page.getByTestId('record-start-button').click();
+  await page.reload();
+
+  await expect(page.getByText('Recording was interrupted. Please review and record again if needed.')).toBeVisible();
+  await expect(page.getByTestId('step-recording')).toBeVisible();
+});
+
+test('indexeddb unavailable shows storage error without crashing', async ({ page }) => {
+  await mockGraphql(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'indexedDB', {
+      value: undefined,
+      configurable: true
+    });
+  });
+  await page.goto('/');
+
+  await page.getByRole('button', { name: 'Enable consent' }).click();
+  await page.getByTestId('record-use-demo-audio-button').click();
+
+  await expect(page.getByText('Local audio storage is unavailable in this environment.')).toBeVisible();
+  await expect(page.getByTestId('step-recording')).toBeVisible();
 });
