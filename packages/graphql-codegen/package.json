@@ -1,0 +1,30 @@
+{
+  "name": "@workspace/graphql-codegen",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "codegen": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@graphql-codegen/cli": "5.0.7",
+    "@graphql-codegen/typed-document-node": "5.1.2",
+    "@graphql-codegen/typescript": "4.1.6",
+    "@graphql-codegen/typescript-operations": "4.6.1",
+    "graphql": "16.13.2"
+  },
+  "devDependencies": {
+    "@types/node": "25.6.0",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/tsconfig": "workspace:*",
+    "eslint": "9.39.4",
+    "tsx": "4.20.6",
+    "typescript": "6.0.2",
+    "vitest": "4.1.4"
+  }
+}

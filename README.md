@@ -97,6 +97,23 @@ pnpm test:e2e
 pnpm test:visual
 ```
 
+## GraphQL Codegen (Multi-endpoint)
+
+- Package: `@workspace/graphql-codegen`
+- Target config file: `graphql.codegen.targets.json`
+- Supports multiple GraphQL URLs (one target per endpoint), optional headers, and per-target output folder.
+
+```bash
+# Generate all targets
+pnpm codegen
+
+# Generate one target
+pnpm codegen -- --target aepsy
+
+# Use custom config path
+pnpm codegen -- --config path/to/graphql.codegen.targets.json
+```
+
 ## Local Git Hooks (Husky)
 
 - `pre-commit`: runs `lint-staged` (auto-fix ESLint/Prettier on staged files)

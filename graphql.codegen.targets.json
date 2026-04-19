@@ -1,0 +1,11 @@
+{
+  "targets": [
+    {
+      "name": "aepsy",
+      "schema": "${NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT}",
+      "outputDir": "packages/graphql-codegen/generated/aepsy",
+      "documents": ["apps/web/src/**/*.graphql", "apps/web/src/**/*.gql"],
+      "headers": {}
+    }
+  ]
+}

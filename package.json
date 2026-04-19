@@ -4,6 +4,7 @@
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "build": "turbo run build",
+    "codegen": "pnpm --filter @workspace/graphql-codegen codegen",
     "dev": "turbo run dev",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "lint": "turbo run lint",

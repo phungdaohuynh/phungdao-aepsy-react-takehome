@@ -1,0 +1,7 @@
+{
+  "extends": "@workspace/tsconfig/library.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src/**/*"]
+}

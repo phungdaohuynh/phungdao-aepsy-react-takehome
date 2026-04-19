@@ -5,6 +5,9 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "dist/**"]
     },
+    "codegen": {
+      "outputs": ["packages/graphql-codegen/generated/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
