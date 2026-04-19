@@ -5,12 +5,19 @@ import { setupI18n } from '@workspace/localization';
 import { AppThemeProvider, UIToastProvider } from '@workspace/ui';
 import type { PropsWithChildren } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import deChCommon from '@locales/de-CH/common.json';
+import enCommon from '@locales/en/common.json';
 
 import { getAudioBlob } from '@/shared/lib/audio-storage';
 import { createQueryClient } from '@/shared/providers/query-client';
 import { useAppStore } from '@/shared/state/store';
 
-setupI18n('en');
+setupI18n('en', {
+  resources: {
+    en: { common: enCommon },
+    'de-CH': { common: deChCommon },
+  },
+});
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(() => createQueryClient());

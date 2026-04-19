@@ -1,19 +1,14 @@
 'use client';
 
-import { z } from 'zod';
+type PublicEnv = {
+  NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT?: string;
+};
 
-const envSchema = z.object({
-  NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT: z.url().optional(),
-});
+const endpoint = process.env.NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT;
+const normalizedEndpoint = typeof endpoint === 'string' && endpoint.trim().length > 0 ? endpoint : null;
 
-const parsedEnv = envSchema.safeParse({
-  NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT: process.env.NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT,
-});
-
-if (!parsedEnv.success) {
-  throw new Error(
-    `Invalid environment configuration: ${parsedEnv.error.issues.map((issue) => issue.path.join('.') + ' ' + issue.message).join(', ')}`,
-  );
-}
-
-export const env = parsedEnv.data;
+export const env: PublicEnv = normalizedEndpoint
+  ? {
+      NEXT_PUBLIC_AEPSY_GRAPHQL_ENDPOINT: normalizedEndpoint,
+    }
+  : {};

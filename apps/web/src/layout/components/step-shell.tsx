@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from '@workspace/localization';
-import { Alert, Box, Container, Stack, Typography, UILoadingState, UIStepProgress } from '@workspace/ui';
+import { Alert, Box, Container, Stack, Typography, UIStepProgress } from '@workspace/ui';
 
 import { ASSIGNMENT_STEPS } from '@/shared/constants/steps';
 import { StepRecording } from '@/features/recording/components/step-recording';
@@ -39,7 +39,6 @@ const StepPsychologistsLazy = dynamic(
 export function StepShell() {
   const { t } = useTranslation();
   const step = useAppStore((state) => state.step);
-  const hasHydrated = useAppStore((state) => state.hasHydrated);
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
   const audioStorageKey = useAppStore((state) => state.audioStorageKey);
   const selectedTopicsCount = useAppStore((state) => state.selectedTopics.length);
@@ -71,24 +70,6 @@ export function StepShell() {
       setStep(resolvedStep);
     }
   }, [resolvedStep, setStep, step]);
-
-  if (!hasHydrated) {
-    return (
-      <Container maxWidth="md" sx={{ pt: 2, pb: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Typography
-            variant="body2"
-            component="h1"
-            sx={{ fontWeight: 600, color: 'text.secondary' }}
-          >
-            {t('heroTitle')}
-          </Typography>
-          <Box sx={{ minHeight: 56 }} />
-          <UILoadingState />
-        </Stack>
-      </Container>
-    );
-  }
 
   return (
     <Container maxWidth="md" sx={{ pt: 2, pb: { xs: 3, md: 4 } }}>
