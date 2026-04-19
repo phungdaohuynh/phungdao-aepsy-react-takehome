@@ -8,6 +8,9 @@ const withBundleAnalyzer = nextBundleAnalyzer({
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@workspace/ui', '@workspace/localization', '@workspace/api-client'],
+  experimental: {
+    optimizePackageImports: ['@mui/material'],
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);

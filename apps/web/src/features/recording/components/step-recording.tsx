@@ -430,7 +430,9 @@ export function StepRecording() {
 
         <Alert severity="info">
           <Stack spacing={0.75}>
-            <Typography variant="body2">{t('recording.consent.title')}</Typography>
+            <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
+              {t('recording.consent.title')}
+            </Typography>
             <Stack
               direction="row"
               spacing={1}
@@ -440,13 +442,18 @@ export function StepRecording() {
               <UIButton
                 size="small"
                 variant={hasConsent ? 'contained' : 'outlined'}
+                color={hasConsent ? 'primary' : 'inherit'}
                 onClick={() => {
                   setHasConsent((value) => !value);
+                }}
+                sx={{
+                  color: hasConsent ? 'common.white' : 'text.primary',
+                  borderColor: 'text.primary',
                 }}
               >
                 {hasConsent ? t('recording.consent.enabled') : t('recording.consent.enable')}
               </UIButton>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: 'text.primary' }}>
                 {t('recording.consent.note')}{' '}
                 <Link href="https://www.aepsy.com/privacy" target="_blank" rel="noreferrer">
                   {t('recording.consent.privacyLink')}
@@ -458,14 +465,18 @@ export function StepRecording() {
 
         <Alert severity="success">
           <Stack spacing={1}>
-            <Typography variant="body2">{t('recording.guidedPromptLabel')}</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
+              {t('recording.guidedPromptLabel')}
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
               {intakePrompts[activePromptIndex]}
             </Typography>
             <Stack direction="row" spacing={1}>
               <UIButton
                 size="small"
                 variant="text"
+                color="inherit"
+                sx={{ color: 'text.primary', fontWeight: 700 }}
                 onClick={() =>
                   setActivePromptIndex(
                     (value) => (value - 1 + intakePrompts.length) % intakePrompts.length,
@@ -477,6 +488,8 @@ export function StepRecording() {
               <UIButton
                 size="small"
                 variant="text"
+                color="inherit"
+                sx={{ color: 'text.primary', fontWeight: 700 }}
                 onClick={() => setActivePromptIndex((value) => (value + 1) % intakePrompts.length)}
               >
                 {t('recording.actions.nextPrompt')}

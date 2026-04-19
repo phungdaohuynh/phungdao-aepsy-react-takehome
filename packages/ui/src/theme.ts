@@ -4,9 +4,9 @@ export const appTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#2f9e7a',
-      light: '#66c2a2',
-      dark: '#1f6f56',
+      main: '#1f6f56',
+      light: '#2f9e7a',
+      dark: '#15503e',
     },
     secondary: {
       main: '#7b5bb7',
@@ -38,6 +38,33 @@ export const appTheme = createTheme({
           borderRadius: 10,
           textTransform: 'none',
           fontWeight: 600,
+        },
+        outlined: {
+          borderWidth: 1.5,
+        },
+      },
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
+          color: '#15503e',
+        },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          color: '#18181b',
+        },
+        message: {
+          color: '#18181b',
+        },
+        action: {
+          '& .MuiButton-root': {
+            color: '#18181b',
+            fontWeight: 700,
+          },
         },
       },
     },

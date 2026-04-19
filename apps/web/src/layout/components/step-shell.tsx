@@ -1,54 +1,52 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from '@workspace/localization';
-import { Alert, Container, Stack, Typography, UIStepProgress, UILoadingState } from '@workspace/ui';
+import { Alert, Box, Container, Stack, Typography, UIStepProgress } from '@workspace/ui';
 
 import { ASSIGNMENT_STEPS } from '@/shared/constants/steps';
+import { StepRecording } from '@/features/recording/components/step-recording';
 import { useAppStore } from '@/shared/state/store';
 import { AnalyticsDevDashboard } from '@/layout/components/analytics-dev-dashboard';
 import { IntakeSummaryBar } from '@/layout/components/intake-summary-bar';
 import { NetworkStatusBanner } from '@/layout/components/network-status-banner';
 import { ResumeDraftBanner } from '@/layout/components/resume-draft-banner';
 
-const StepRecordingLazy = dynamic(
-  () =>
-    import('@/features/recording/components/step-recording').then((module) => ({
-      default: module.StepRecording,
-    })),
-  { loading: () => <UILoadingState /> },
-);
 const StepTopicsLazy = dynamic(
   () =>
     import('@/features/topics/components/step-topics').then((module) => ({
       default: module.StepTopics,
     })),
-  { loading: () => <UILoadingState /> },
 );
 const StepPsychologistsLazy = dynamic(
   () =>
     import('@/features/psychologists/components/step-psychologists').then((module) => ({
       default: module.StepPsychologists,
     })),
-  { loading: () => <UILoadingState /> },
 );
 
 export function StepShell() {
   const { t } = useTranslation();
-  const isClientReady = useSyncExternalStore(
-    () => () => undefined,
-    () => true,
-    () => false,
-  );
   const step = useAppStore((state) => state.step);
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
   const audioStorageKey = useAppStore((state) => state.audioStorageKey);
   const selectedTopicsCount = useAppStore((state) => state.selectedTopics.length);
   const setStep = useAppStore((state) => state.setStep);
   const hasAudio = Boolean(audioDataUrl || audioStorageKey);
+  const resolvedStep = useMemo(() => {
+    if (step === 'topics' && !hasAudio) {
+      return 'record';
+    }
 
-  const activeStep = ASSIGNMENT_STEPS.findIndex((item) => item.key === step);
+    if (step === 'psychologists' && selectedTopicsCount === 0) {
+      return hasAudio ? 'topics' : 'record';
+    }
+
+    return step;
+  }, [hasAudio, selectedTopicsCount, step]);
+
+  const activeStep = ASSIGNMENT_STEPS.findIndex((item) => item.key === resolvedStep);
   const completedMap = useMemo(
     () => ({
       record: hasAudio,
@@ -58,27 +56,14 @@ export function StepShell() {
   );
 
   useEffect(() => {
-    if (step === 'topics' && !hasAudio) {
-      setStep('record');
-      return;
+    if (resolvedStep !== step) {
+      setStep(resolvedStep);
     }
-
-    if (step === 'psychologists' && selectedTopicsCount === 0) {
-      setStep(hasAudio ? 'topics' : 'record');
-    }
-  }, [hasAudio, selectedTopicsCount, setStep, step]);
-
-  if (!isClientReady) {
-    return (
-      <Container maxWidth="md" sx={{ pt: 2, pb: { xs: 3, md: 4 } }}>
-        <UILoadingState />
-      </Container>
-    );
-  }
+  }, [resolvedStep, setStep, step]);
 
   return (
     <Container maxWidth="md" sx={{ pt: 2, pb: { xs: 3, md: 4 } }}>
-      <Stack spacing={2} data-testid={`step-shell-${step}`}>
+      <Stack spacing={2} data-testid={`step-shell-${resolvedStep}`}>
         <Typography
           variant="body2"
           component="h1"
@@ -87,8 +72,10 @@ export function StepShell() {
           {t('heroTitle')}
         </Typography>
 
-        <NetworkStatusBanner />
-        <ResumeDraftBanner />
+        <Box sx={{ minHeight: 56 }}>
+          <NetworkStatusBanner />
+          <ResumeDraftBanner />
+        </Box>
         <IntakeSummaryBar />
 
         <UIStepProgress
@@ -100,15 +87,15 @@ export function StepShell() {
           activeStep={activeStep}
         />
 
-        {step === 'psychologists' && selectedTopicsCount === 0 ? (
+        {resolvedStep === 'psychologists' && selectedTopicsCount === 0 ? (
           <Alert severity="warning">{t('errors.requireTopicBeforeSearch')}</Alert>
         ) : null}
 
-        {step === 'record' ? <StepRecordingLazy /> : null}
+        {resolvedStep === 'record' ? <StepRecording /> : null}
 
-        {step === 'topics' ? <StepTopicsLazy /> : null}
+        {resolvedStep === 'topics' ? <StepTopicsLazy /> : null}
 
-        {step === 'psychologists' ? <StepPsychologistsLazy /> : null}
+        {resolvedStep === 'psychologists' ? <StepPsychologistsLazy /> : null}
 
         {process.env.NODE_ENV !== 'production' ? <AnalyticsDevDashboard /> : null}
       </Stack>
