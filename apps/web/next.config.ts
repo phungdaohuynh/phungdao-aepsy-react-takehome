@@ -7,6 +7,7 @@ const withBundleAnalyzer = nextBundleAnalyzer({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  productionBrowserSourceMaps: true,
   transpilePackages: ['@workspace/ui', '@workspace/localization', '@workspace/api-client'],
   experimental: {
     optimizePackageImports: ['@mui/material'],

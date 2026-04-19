@@ -26,6 +26,7 @@ import {
 } from '@workspace/ui';
 
 import { usePsychologistsQuery } from '@/features/psychologists/api/use-psychologists-query';
+import type { ProviderItem } from '@/features/psychologists/api/dto';
 import { DEFAULT_GRAPHQL_ENDPOINT } from '@/features/psychologists/constants/search';
 import {
   getProviderMatchReasons,
@@ -55,7 +56,10 @@ export function StepPsychologists() {
     pageSize: 8,
   });
 
-  const providers = (query.data?.pages ?? []).flatMap((page) => page.items);
+  const providers = (query.data?.pages ?? []).reduce<ProviderItem[]>(
+    (accumulator, page) => accumulator.concat(page.items),
+    [],
+  );
 
   const uniqueProviders = providers.filter((provider, index) => {
     return (

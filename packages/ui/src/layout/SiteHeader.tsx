@@ -21,8 +21,7 @@ export function UISiteHeader({ title, rightSlot }: UISiteHeaderProps) {
       sx={{
         borderBottom: '1px solid',
         borderColor: 'divider',
-        backdropFilter: 'blur(8px)',
-        backgroundColor: 'rgba(252, 252, 253, 0.85)',
+        backgroundColor: 'background.paper',
       }}
     >
       <Container maxWidth="lg">

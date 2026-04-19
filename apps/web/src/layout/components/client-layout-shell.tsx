@@ -1,11 +1,18 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { i18n } from '@workspace/localization';
 import { useTranslation } from '@workspace/localization';
 import { useEffect, type PropsWithChildren } from 'react';
 import { UIAppShell, UISiteFooter, UISiteHeader } from '@workspace/ui';
 
-import { LanguageSwitcher } from '@/layout/components/language-switcher';
+const LanguageSwitcherLazy = dynamic(
+  () =>
+    import('@/layout/components/language-switcher').then((module) => ({
+      default: module.LanguageSwitcher,
+    })),
+  { ssr: false },
+);
 
 type ClientLayoutShellProps = PropsWithChildren<{
   year: number;
@@ -32,7 +39,7 @@ export function ClientLayoutShell({ year, children }: ClientLayoutShellProps) {
 
   return (
     <UIAppShell
-      header={<UISiteHeader title={title} rightSlot={<LanguageSwitcher />} />}
+      header={<UISiteHeader title={title} rightSlot={<LanguageSwitcherLazy />} />}
       footer={<UISiteFooter text={footerLabel} />}
     >
       {children}
