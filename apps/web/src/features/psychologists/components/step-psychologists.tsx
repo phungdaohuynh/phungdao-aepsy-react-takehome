@@ -471,32 +471,54 @@ export function StepPsychologists() {
       ) : null}
 
       {compareIds.length > 0 && isCompareVisible ? (
-        <Box
-          data-testid="psychologists-compare-panel"
-          sx={{
-            position: 'fixed',
-            left: { xs: 8, md: 24 },
-            right: { xs: 8, md: 24 },
-            bottom: { xs: 8, md: 16 },
-            zIndex: 1200,
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 2,
-            bgcolor: 'background.paper',
-            boxShadow: 8,
-            p: 1.5,
-            maxHeight: { xs: '55vh', md: '50vh' },
-            overflow: 'auto',
-          }}
-        >
-          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Box>
+        <>
+          <Box
+            data-testid="psychologists-compare-backdrop"
+            onClick={() => setCompareVisible(false)}
+            sx={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1199,
+              bgcolor: 'transparent',
+            }}
+          />
+          <Box
+            data-testid="psychologists-compare-panel"
+            sx={{
+              position: 'fixed',
+              left: { xs: 8, md: 24 },
+              right: { xs: 8, md: 24 },
+              bottom: { xs: 8, md: 16 },
+              zIndex: 1200,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              bgcolor: 'background.paper',
+              boxShadow: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: { xs: '55vh', md: '50vh' },
+              overflow: 'hidden',
+            }}
+          >
+          <Stack
+            direction="row"
+            sx={{
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              p: 1.5,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              flexShrink: 0,
+            }}
+          >
+            <Box sx={{ minWidth: 0, pr: 1 }}>
               <Typography variant="h6">{t('psychologists.compare.title')}</Typography>
               <Typography variant="body2" color="text.secondary">
                 {t('psychologists.compare.description')}
               </Typography>
             </Box>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
               <UIButton variant="outlined" size="small" onClick={() => setCompareVisible(false)}>
                 {t('psychologists.compare.close')}
               </UIButton>
@@ -513,8 +535,12 @@ export function StepPsychologists() {
             </Stack>
           </Stack>
 
-          <Box sx={{ overflowX: 'auto' }}>
-            <Stack direction="row" spacing={1.25} sx={{ minWidth: 920 }}>
+          <Box sx={{ p: 1.5, overflow: 'auto', minHeight: 0 }}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={1.25}
+              sx={{ minWidth: { xs: 'auto', md: 920 } }}
+            >
               {compareProviders.map(({ provider, score, reasons }) => {
                 const name =
                   getProviderFullName(provider.userName.firstName, provider.userName.lastName) ||
@@ -530,7 +556,7 @@ export function StepPsychologists() {
                   <Box
                     key={`compare-${provider.userInfo.firebaseUid}`}
                     sx={{
-                      minWidth: 280,
+                      minWidth: { xs: 'auto', md: 280 },
                       flex: 1,
                       p: 1.25,
                       border: '1px solid',
@@ -633,7 +659,8 @@ export function StepPsychologists() {
               })}
             </Stack>
           </Box>
-        </Box>
+          </Box>
+        </>
       ) : null}
     </UISectionCard>
   );

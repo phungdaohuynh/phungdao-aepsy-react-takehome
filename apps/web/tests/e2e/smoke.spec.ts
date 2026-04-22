@@ -250,7 +250,7 @@ test('compare panel supports close, reopen, and remove item', async ({ page }) =
   await page.getByTestId('provider-card-provider-1').getByRole('button', { name: 'Compare' }).click();
 
   await expect(page.getByText('Compare psychologists')).toBeVisible();
-  await page.getByTestId('psychologists-compare-panel').getByRole('button', { name: 'Close' }).click();
+  await page.mouse.click(2, 2);
   await expect(page.getByText('Compare psychologists')).not.toBeVisible();
 
   await page.getByTestId('psychologists-compare-floating-button').click();
