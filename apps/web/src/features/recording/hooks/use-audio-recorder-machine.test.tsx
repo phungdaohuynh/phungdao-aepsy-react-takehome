@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAudioRecorderMachine } from '@/features/recording/hooks/use-audio-recorder-machine';
 
 class FakeMediaRecorder extends EventTarget {
-  public state: 'inactive' | 'recording' = 'inactive';
+  public state: 'inactive' | 'recording' | 'paused' = 'inactive';
   public mimeType = 'audio/webm';
 
   start() {
@@ -14,6 +14,16 @@ class FakeMediaRecorder extends EventTarget {
   stop() {
     this.state = 'inactive';
     this.dispatchEvent(new Event('stop'));
+  }
+
+  pause() {
+    this.state = 'paused';
+    this.dispatchEvent(new Event('pause'));
+  }
+
+  resume() {
+    this.state = 'recording';
+    this.dispatchEvent(new Event('resume'));
   }
 }
 
@@ -129,5 +139,53 @@ describe('useAudioRecorderMachine', () => {
     });
 
     expect(window.sessionStorage.getItem('aepsy-recording-interrupted')).toBeNull();
+  });
+
+  it('pauses and resumes recording before stopping', async () => {
+    setMediaRecorder(FakeMediaRecorder);
+    setMediaDevices(async () => createStreamMock());
+
+    const { result } = renderHook(() =>
+      useAudioRecorderMachine({
+        onAudioReady: vi.fn(),
+        onError: vi.fn(),
+      }),
+    );
+
+    await act(async () => {
+      await result.current.startRecording();
+    });
+
+    await waitFor(() => {
+      expect(result.current.state.status).toBe('recording');
+    });
+
+    act(() => {
+      result.current.pauseRecording();
+    });
+
+    await waitFor(() => {
+      expect(result.current.state.status).toBe('paused');
+      expect(result.current.canPause).toBe(false);
+      expect(result.current.canResume).toBe(true);
+    });
+
+    act(() => {
+      result.current.resumeRecording();
+    });
+
+    await waitFor(() => {
+      expect(result.current.state.status).toBe('recording');
+      expect(result.current.canPause).toBe(true);
+      expect(result.current.canResume).toBe(false);
+    });
+
+    act(() => {
+      result.current.stopRecording();
+    });
+
+    await waitFor(() => {
+      expect(result.current.state.status).toBe('error');
+    });
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useTranslation } from '@workspace/localization';
 import {
   Alert,
@@ -10,7 +10,6 @@ import {
   Tooltip,
   Stack,
   Typography,
-  Link,
   UIButton,
   UIConfirmDialog,
   UISectionCard,
@@ -24,31 +23,72 @@ import {
 } from '@/features/recording/constants/recording';
 import { useAudioRecorderMachine } from '@/features/recording/hooks/use-audio-recorder-machine';
 import { useLargeAudioUpload } from '@/features/recording/hooks/use-large-audio-upload';
-import {
-  applyHistoryPolicy,
-  formatShortDate,
-  formatSizeMb,
-  makeHistoryEntry,
-} from '@/features/recording/lib/recording-history';
 import { statusColor, statusLabel } from '@/features/recording/lib/recorder-status';
 import { trackEvent } from '@/shared/lib/analytics';
 import {
-  deleteAudioBlob,
-  deleteAudioBlobs,
   getAudioBlob,
   saveAudioBlob,
 } from '@/shared/lib/audio-storage';
 import { useAppStore } from '@/shared/state/store';
-import type { RecordingHistoryItem } from '@/shared/state/types';
+
+const LARGE_UPLOAD_IN_PROGRESS_SESSION_KEY = 'aepsy-large-upload-in-progress';
+const WAVEFORM_BAR_COUNT = 220;
+
+const formatRecordingElapsed = (seconds: number) => {
+  const mins = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, '0');
+  const secs = (seconds % 60).toString().padStart(2, '0');
+  return `${mins}:${secs}`;
+};
+
+const formatAudioDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, '0');
+  const secs = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, '0');
+  return `${mins}:${secs}.0`;
+};
+
+const toFileExtensionFromMime = (mimeType: string) => {
+  const normalized = mimeType.toLowerCase();
+  if (normalized.includes('mpeg') || normalized.includes('mp3')) {
+    return 'mp3';
+  }
+  if (normalized.includes('wav')) {
+    return 'wav';
+  }
+  if (normalized.includes('ogg')) {
+    return 'ogg';
+  }
+  if (normalized.includes('webm')) {
+    return 'webm';
+  }
+  if (normalized.includes('m4a') || normalized.includes('mp4')) {
+    return 'm4a';
+  }
+  if (normalized.includes('aac')) {
+    return 'aac';
+  }
+  if (normalized.includes('flac')) {
+    return 'flac';
+  }
+  return null;
+};
 
 export function StepRecording() {
   const { t } = useTranslation();
   const toast = useUIToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [hasConsent, setHasConsent] = useState(false);
-  const [activePromptIndex, setActivePromptIndex] = useState(0);
-  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const LARGE_UPLOAD_IN_PROGRESS_SESSION_KEY = 'aepsy-large-upload-in-progress';
+  const [isClosePanelDialogOpen, setClosePanelDialogOpen] = useState(false);
+  const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
+  const [previewCurrentSeconds, setPreviewCurrentSeconds] = useState(0);
+  const [previewDurationSeconds, setPreviewDurationSeconds] = useState(0);
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  const [isAudioSaved, setIsAudioSaved] = useState(false);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [showLargeUploadInterruptionWarning, setShowLargeUploadInterruptionWarning] = useState(
     () => {
       if (typeof window === 'undefined') {
@@ -67,26 +107,29 @@ export function StepRecording() {
 
   const audioDataUrl = useAppStore((state) => state.audioDataUrl);
   const audioStorageKey = useAppStore((state) => state.audioStorageKey);
+  const audioMimeType = useAppStore((state) => state.audioMimeType);
   const audioFileName = useAppStore((state) => state.audioFileName);
-  const audioSourceType = useAppStore((state) => state.audioSourceType);
-  const recordingHistory = useAppStore((state) => state.recordingHistory);
   const setAudioPayload = useAppStore((state) => state.setAudioPayload);
-  const setRecordingHistory = useAppStore((state) => state.setRecordingHistory);
-  const removeRecordingHistoryEntry = useAppStore((state) => state.removeRecordingHistoryEntry);
-  const clearRecordingHistory = useAppStore((state) => state.clearRecordingHistory);
   const clearAudioPayload = useAppStore((state) => state.clearAudioPayload);
   const clearSelectedTopics = useAppStore((state) => state.clearSelectedTopics);
   const setStep = useAppStore((state) => state.setStep);
-  const hasHydrated = useAppStore((state) => state.hasHydrated);
   const hasAudio = Boolean(audioDataUrl || audioStorageKey);
+  const recorderStatusRef = useRef('idle');
   const largeUpload = useLargeAudioUpload();
-  const intakePrompts = useMemo(
-    () => [
-      t('recording.prompts.prompt1'),
-      t('recording.prompts.prompt2'),
-      t('recording.prompts.prompt3'),
-    ],
-    [t],
+  const waveformBars = useMemo(() => {
+    const seed = `${audioStorageKey ?? ''}${audioDataUrl ?? ''}`
+      .split('')
+      .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+
+    return Array.from({ length: WAVEFORM_BAR_COUNT }, (_, index) => {
+      const baseline = 2 + (Math.sin((index + seed) * 0.25) + 1) * 4;
+      const burst = ((index + seed) % 37 === 0 ? 12 : 0) + ((index + seed) % 53 === 0 ? 8 : 0);
+      return Math.min(20, baseline + burst);
+    });
+  }, [audioDataUrl, audioStorageKey]);
+  const waveformBarWidth = useMemo(
+    () => `calc((100% - ${(waveformBars.length - 1) * 1}px) / ${waveformBars.length})`,
+    [waveformBars.length],
   );
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -103,43 +146,6 @@ export function StepRecording() {
     window.sessionStorage.removeItem(LARGE_UPLOAD_IN_PROGRESS_SESSION_KEY);
   }, [largeUpload.state.status]);
 
-  const enforceHistoryPolicy = async (nextEntries: RecordingHistoryItem[]) => {
-    const now = Date.now();
-    const { kept, removedKeys } = applyHistoryPolicy(nextEntries, now);
-    const keysToDelete = removedKeys.filter((key) => key !== audioStorageKey);
-
-    if (keysToDelete.length > 0) {
-      await deleteAudioBlobs(keysToDelete);
-    }
-
-    setRecordingHistory(kept);
-  };
-
-  const saveHistoryEntry = async (entry: Omit<RecordingHistoryItem, 'createdAt' | 'expiresAt'>) => {
-    const now = Date.now();
-    const historyEntry = makeHistoryEntry(entry, now);
-
-    await enforceHistoryPolicy([historyEntry, ...recordingHistory]);
-  };
-
-  useEffect(() => {
-    if (!hasHydrated || recordingHistory.length === 0) {
-      return;
-    }
-
-    const now = Date.now();
-    const { kept, removedKeys } = applyHistoryPolicy(recordingHistory, now);
-
-    if (removedKeys.length === 0 && kept.length === recordingHistory.length) {
-      return;
-    }
-
-    void (async () => {
-      await deleteAudioBlobs(removedKeys.filter((key) => key !== audioStorageKey));
-      setRecordingHistory(kept);
-    })();
-  }, [audioStorageKey, hasHydrated, recordingHistory, setRecordingHistory]);
-
   const recorder = useAudioRecorderMachine({
     onAudioReady: async ({
       audioBlob,
@@ -147,10 +153,6 @@ export function StepRecording() {
       audioMimeType,
       sourceType,
     }) => {
-      if (audioStorageKey) {
-        await deleteAudioBlob(audioStorageKey);
-      }
-
       if (audioDataUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(audioDataUrl);
       }
@@ -179,21 +181,144 @@ export function StepRecording() {
         trackEvent('record_stopped', { mimeType: audioMimeType });
       }
 
-      await saveHistoryEntry({
-        audioStorageKey: nextAudioStorageKey,
-        audioMimeType,
-        audioFileName: nextAudioFileName,
-        audioSourceType: sourceType,
-        sizeBytes: audioBlob.size,
-      });
     },
     onError: (message) => {
       toast.showError(message);
     },
   });
+  const isRecordingMode = ['recording', 'paused'].includes(recorder.state.status);
+
+  useEffect(() => {
+    const previousStatus = recorderStatusRef.current;
+
+    if (
+      recorder.state.status === 'recording' &&
+      !['recording', 'paused'].includes(previousStatus)
+    ) {
+      setRecordingElapsedSeconds(0);
+    }
+
+    recorderStatusRef.current = recorder.state.status;
+  }, [recorder.state.status]);
+
+  useEffect(() => {
+    if (recorder.state.status !== 'recording') {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setRecordingElapsedSeconds((value) => value + 1);
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [recorder.state.status]);
+
+  useEffect(() => {
+    setIsAudioSaved(false);
+    setPreviewCurrentSeconds(0);
+    setPreviewDurationSeconds(0);
+    setIsPreviewPlaying(false);
+  }, [audioStorageKey]);
 
   const onUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const onTogglePreviewAudio = async () => {
+    const audioEl = previewAudioRef.current;
+    if (!audioEl || !audioDataUrl) {
+      return;
+    }
+
+    if (isPreviewPlaying) {
+      audioEl.pause();
+      setIsPreviewPlaying(false);
+      return;
+    }
+
+    try {
+      await audioEl.play();
+      setIsPreviewPlaying(true);
+    } catch {
+      toast.showError(t('recording.toast.operationFailed'));
+    }
+  };
+
+  const onSeekPreviewAudio = async (event: MouseEvent<HTMLDivElement>) => {
+    const audioEl = previewAudioRef.current;
+    if (!audioEl) {
+      return;
+    }
+
+    const duration = Number.isFinite(audioEl.duration) && audioEl.duration > 0
+      ? audioEl.duration
+      : previewDurationSeconds;
+    if (duration <= 0) {
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const targetTime = ratio * duration;
+
+    audioEl.currentTime = targetTime;
+    setPreviewCurrentSeconds(targetTime);
+
+    if (!isPreviewPlaying) {
+      try {
+        await audioEl.play();
+        setIsPreviewPlaying(true);
+      } catch {
+        toast.showError(t('recording.toast.operationFailed'));
+      }
+    }
+  };
+
+  const onSaveAudioNow = async () => {
+    try {
+      let blob: Blob | null = null;
+
+      if (audioStorageKey) {
+        blob = await getAudioBlob(audioStorageKey);
+      }
+
+      if (!blob && audioDataUrl) {
+        const response = await fetch(audioDataUrl);
+        blob = await response.blob();
+      }
+
+      if (!blob) {
+        throw new Error(t('recording.noAudio'));
+      }
+
+      const fallbackName = `voice-note-${Date.now()}`;
+      const baseName = audioFileName ? audioFileName.replace(/\.[^/.]+$/, '') : fallbackName;
+      const effectiveMimeType = blob.type || audioMimeType || '';
+      const extensionFromMime = effectiveMimeType ? toFileExtensionFromMime(effectiveMimeType) : null;
+      const extensionFromName = audioFileName?.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase() ?? null;
+      const nextExtension = extensionFromMime ?? extensionFromName ?? 'webm';
+      const nextFileName = `${baseName}.${nextExtension}`;
+      const normalizedBlob = effectiveMimeType
+        ? blob.type === effectiveMimeType
+          ? blob
+          : new Blob([blob], { type: effectiveMimeType })
+        : blob;
+      const downloadUrl = URL.createObjectURL(normalizedBlob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = nextFileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(downloadUrl);
+
+      setIsAudioSaved(true);
+      toast.showSuccess(t('recording.toast.saved'));
+    } catch (error) {
+      toast.showError(toErrorMessage(error));
+    }
   };
 
   const toErrorMessage = (error: unknown, fallbackKey = 'recording.toast.operationFailed') => {
@@ -212,9 +337,9 @@ export function StepRecording() {
     }
 
     const isAudioByMime = file.type.startsWith('audio/');
-    const isAudioByName = /\.(mp3|wav|m4a|webm|ogg|aac|flac)$/i.test(file.name);
+    const isMp3ByName = /\.mp3$/i.test(file.name);
 
-    if (!isAudioByMime && !isAudioByName) {
+    if (!isAudioByMime && !isMp3ByName) {
       toast.showError(t('recording.toast.invalidAudio'));
       event.target.value = '';
       return;
@@ -267,13 +392,6 @@ export function StepRecording() {
       });
       toast.showSuccess(t('recording.toast.longUploadSuccess'));
 
-      await saveHistoryEntry({
-        audioStorageKey: nextAudioStorageKey,
-        audioMimeType: file.type || 'audio/mpeg',
-        audioFileName: file.name,
-        audioSourceType: 'uploaded',
-        sizeBytes: file.size,
-      });
     } catch (error) {
       toast.showError(toErrorMessage(error, 'recording.toast.longUploadFailed'));
     }
@@ -297,123 +415,6 @@ export function StepRecording() {
     }
   };
 
-  const onUseDemoAudio = async () => {
-    try {
-      if (audioStorageKey) {
-        await deleteAudioBlob(audioStorageKey);
-        removeRecordingHistoryEntry(audioStorageKey);
-      }
-
-      if (audioDataUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(audioDataUrl);
-      }
-
-      const demoBlob = new Blob(['demo-audio'], { type: 'audio/webm' });
-      const nextAudioStorageKey = await saveAudioBlob(demoBlob);
-
-      clearSelectedTopics();
-      largeUpload.reset();
-      setAudioPayload({
-        audioDataUrl: URL.createObjectURL(demoBlob),
-        audioStorageKey: nextAudioStorageKey,
-        audioMimeType: 'audio/webm',
-        audioFileName: 'demo-audio.webm',
-        audioSourceType: 'uploaded',
-      });
-      toast.showInfo(t('recording.toast.demoLoaded'));
-    } catch (error) {
-      toast.showError(toErrorMessage(error));
-    }
-  };
-
-  const onDeleteAudioNow = async () => {
-    try {
-      if (audioStorageKey) {
-        await deleteAudioBlob(audioStorageKey);
-      }
-
-      if (audioDataUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(audioDataUrl);
-      }
-
-      recorder.resetMachine();
-      largeUpload.reset();
-      clearAudioPayload();
-      clearSelectedTopics();
-      trackEvent('audio_deleted', { source: audioSourceType ?? 'unknown' });
-      toast.showInfo(t('recording.toast.audioDeleted'));
-    } catch (error) {
-      toast.showError(toErrorMessage(error));
-    }
-  };
-
-  const onRemoveHistoryItem = async (entry: RecordingHistoryItem) => {
-    try {
-      await deleteAudioBlob(entry.audioStorageKey);
-      removeRecordingHistoryEntry(entry.audioStorageKey);
-
-      if (audioStorageKey === entry.audioStorageKey) {
-        if (audioDataUrl?.startsWith('blob:')) {
-          URL.revokeObjectURL(audioDataUrl);
-        }
-        recorder.resetMachine();
-        largeUpload.reset();
-        clearAudioPayload();
-        clearSelectedTopics();
-      }
-    } catch (error) {
-      toast.showError(toErrorMessage(error));
-    }
-  };
-
-  const onRestoreHistoryItem = async (entry: RecordingHistoryItem) => {
-    try {
-      const blob = await getAudioBlob(entry.audioStorageKey);
-
-      if (!blob) {
-        removeRecordingHistoryEntry(entry.audioStorageKey);
-        toast.showError(t('recording.toast.historyMissing'));
-        return;
-      }
-
-      if (audioDataUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(audioDataUrl);
-      }
-
-      const previewUrl = URL.createObjectURL(blob);
-      clearSelectedTopics();
-      setAudioPayload({
-        audioDataUrl: previewUrl,
-        audioStorageKey: entry.audioStorageKey,
-        audioMimeType: entry.audioMimeType,
-        audioFileName: entry.audioFileName,
-        audioSourceType: entry.audioSourceType,
-      });
-
-      trackEvent('history_restored', { source: entry.audioSourceType });
-      toast.showSuccess(t('recording.toast.historyRestored'));
-    } catch (error) {
-      toast.showError(toErrorMessage(error));
-    }
-  };
-
-  const onClearAllHistory = async () => {
-    try {
-      const allKeys = recordingHistory.map((item) => item.audioStorageKey);
-      await deleteAudioBlobs(allKeys);
-      clearRecordingHistory();
-
-      if (audioStorageKey && allKeys.includes(audioStorageKey)) {
-        clearAudioPayload();
-      }
-
-      trackEvent('history_cleared', { count: allKeys.length });
-      toast.showInfo(t('recording.toast.historyCleared'));
-    } catch (error) {
-      toast.showError(toErrorMessage(error));
-    }
-  };
-
   return (
     <UISectionCard
       title={t('recording.title')}
@@ -428,81 +429,11 @@ export function StepRecording() {
       <Stack spacing={2} data-testid="step-recording">
         <Typography color="text.secondary">{t('recording.description')}</Typography>
 
-        <Alert severity="info">
-          <Stack spacing={0.75}>
-            <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
-              {t('recording.consent.title')}
-            </Typography>
-            <Stack
-              direction="row"
-              spacing={1}
-              useFlexGap
-              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
-            >
-              <UIButton
-                size="small"
-                variant={hasConsent ? 'contained' : 'outlined'}
-                color={hasConsent ? 'primary' : 'inherit'}
-                onClick={() => {
-                  setHasConsent((value) => !value);
-                }}
-                sx={{
-                  color: hasConsent ? 'common.white' : 'text.primary',
-                  borderColor: 'text.primary',
-                }}
-              >
-                {hasConsent ? t('recording.consent.enabled') : t('recording.consent.enable')}
-              </UIButton>
-              <Typography variant="caption" sx={{ color: 'text.primary' }}>
-                {t('recording.consent.note')}{' '}
-                <Link href="https://www.aepsy.com/privacy" target="_blank" rel="noreferrer">
-                  {t('recording.consent.privacyLink')}
-                </Link>
-              </Typography>
-            </Stack>
-          </Stack>
-        </Alert>
-
-        <Alert severity="success">
-          <Stack spacing={1}>
-            <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
-              {t('recording.guidedPromptLabel')}
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {intakePrompts[activePromptIndex]}
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              <UIButton
-                size="small"
-                variant="text"
-                color="inherit"
-                sx={{ color: 'text.primary', fontWeight: 700 }}
-                onClick={() =>
-                  setActivePromptIndex(
-                    (value) => (value - 1 + intakePrompts.length) % intakePrompts.length,
-                  )
-                }
-              >
-                {t('recording.actions.prevPrompt')}
-              </UIButton>
-              <UIButton
-                size="small"
-                variant="text"
-                color="inherit"
-                sx={{ color: 'text.primary', fontWeight: 700 }}
-                onClick={() => setActivePromptIndex((value) => (value + 1) % intakePrompts.length)}
-              >
-                {t('recording.actions.nextPrompt')}
-              </UIButton>
-            </Stack>
-          </Stack>
-        </Alert>
-
         {recorder.state.interrupted ? (
           <Alert severity="warning">{t('recording.interrupted')}</Alert>
         ) : null}
 
-        {recorder.state.status === 'recording' ? (
+        {['recording', 'paused'].includes(recorder.state.status) ? (
           <Alert severity="warning">{t('recording.notSavedUntilStopped')}</Alert>
         ) : null}
 
@@ -517,159 +448,354 @@ export function StepRecording() {
           </Alert>
         ) : null}
 
-        {recordingHistory.length > 0 ? (
-          <UISectionCard
-            title={t('recording.history.title')}
-            subheader={t('recording.history.subheader', { count: recordingHistory.length })}
-            action={
-              <UIButton
-                size="small"
-                variant="text"
-                color="error"
-                onClick={() => void onClearAllHistory()}
-              >
-                {t('recording.history.clearAll')}
-              </UIButton>
-            }
-          >
-            <Stack spacing={1.25}>
-              {recordingHistory.map((entry) => (
-                <Box
-                  key={`history-${entry.audioStorageKey}`}
-                  sx={{ p: 1.25, borderRadius: 1.5, border: '1px solid', borderColor: 'divider' }}
-                >
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    spacing={1}
-                    sx={{ alignItems: { sm: 'center' } }}
-                  >
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {entry.audioFileName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {entry.audioSourceType} • {formatSizeMb(entry.sizeBytes)} •{' '}
-                        {formatShortDate(entry.createdAt)}
-                      </Typography>
-                    </Box>
-                    <Stack direction="row" spacing={1}>
-                      <UIButton
-                        size="small"
-                        variant="outlined"
-                        onClick={() => void onRestoreHistoryItem(entry)}
-                      >
-                        {t('recording.history.restore')}
-                      </UIButton>
-                      <UIButton
-                        size="small"
-                        variant="text"
-                        color="error"
-                        onClick={() => void onRemoveHistoryItem(entry)}
-                      >
-                        {t('recording.history.remove')}
-                      </UIButton>
-                    </Stack>
-                  </Stack>
-                </Box>
-              ))}
-            </Stack>
-          </UISectionCard>
-        ) : null}
-
         {recorder.state.error ? <Alert severity="error">{recorder.state.error}</Alert> : null}
 
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1.5}
-          useFlexGap
-          sx={{ flexWrap: 'wrap' }}
+        <Box
+          sx={{
+            borderRadius: 2,
+            minHeight: { xs: 220, md: 250 },
+            px: { xs: 2, md: 3 },
+            py: { xs: 2.5, md: 3 },
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: isRecordingMode ? 'space-between' : 'center',
+            bgcolor: '#155f53',
+            backgroundImage: 'linear-gradient(180deg, #1f9a80 0%, #145f53 100%)',
+          }}
         >
-          <Tooltip
-            title={
-              !hasConsent
-                ? t('recording.tooltips.consentRequired')
-                : t('recording.tooltips.startRecording')
-            }
-          >
-            <span>
-              <UIButton
-                onClick={() => {
-                  trackEvent('record_started');
-                  void recorder.startRecording();
-                }}
-                disabled={!recorder.canStart || !hasConsent}
-                data-testid="record-start-button"
-              >
-                {t('recording.actions.start')}
-              </UIButton>
-            </span>
-          </Tooltip>
-          <UIButton
-            variant="outlined"
-            onClick={recorder.stopRecording}
-            disabled={recorder.state.status !== 'recording'}
-            data-testid="record-stop-button"
-          >
-            {t('recording.actions.stop')}
-          </UIButton>
-          <Tooltip
-            title={
-              hasAudio ? t('recording.tooltips.rerecord') : t('recording.tooltips.audioNeeded')
-            }
-          >
-            <span>
+          {isRecordingMode ? (
+            <>
+              <Box sx={{ pt: 1 }}>
+                <Box
+                  sx={{
+                    position: 'relative',
+                    height: 1,
+                    bgcolor: 'rgba(121, 229, 194, 0.45)',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: -0.5,
+                      left: 0,
+                      height: 2,
+                      width: `${4 + ((recordingElapsedSeconds * 8) % 96)}%`,
+                      bgcolor: '#2FE0B6',
+                      borderRadius: 99,
+                    }}
+                  />
+                </Box>
+              </Box>
+              <Stack direction="row" spacing={1.5} sx={{ alignSelf: 'center', mt: 'auto' }}>
+                <Tooltip title={t('recording.actions.complete')}>
+                  <span>
+                    <UIButton
+                      onClick={recorder.stopRecording}
+                      data-testid="record-stop-button"
+                      aria-label={t('recording.actions.complete')}
+                      sx={{
+                        borderRadius: 999,
+                        minHeight: 44,
+                        px: 2,
+                        bgcolor: '#0b4f43',
+                        color: '#ff1f57',
+                        '&:hover': { bgcolor: '#0b4f43' },
+                      }}
+                    >
+                      <Stack direction="row" spacing={0.8} sx={{ alignItems: 'center' }}>
+                        <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: '#ff1f57' }} />
+                        <Typography sx={{ color: '#ff1f57', fontWeight: 700 }}>
+                          {formatRecordingElapsed(recordingElapsedSeconds)}
+                        </Typography>
+                      </Stack>
+                    </UIButton>
+                  </span>
+                </Tooltip>
+
+                {recorder.state.status === 'recording' ? (
+                  <Tooltip title={t('recording.actions.pause')}>
+                    <span>
+                      <UIButton
+                        onClick={recorder.pauseRecording}
+                        data-testid="record-pause-button"
+                        aria-label={t('recording.actions.pause')}
+                        sx={{
+                          minWidth: 44,
+                          width: 44,
+                          height: 44,
+                          borderRadius: '50%',
+                          bgcolor: '#0f5e4f',
+                          color: '#daf7ee',
+                          '&:hover': { bgcolor: '#0f5e4f' },
+                        }}
+                      >
+                        II
+                      </UIButton>
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <Tooltip title={t('recording.actions.resume')}>
+                    <span>
+                      <UIButton
+                        onClick={recorder.resumeRecording}
+                        data-testid="record-resume-button"
+                        aria-label={t('recording.actions.resume')}
+                        sx={{
+                          minWidth: 44,
+                          width: 44,
+                          height: 44,
+                          borderRadius: '50%',
+                          bgcolor: '#0f5e4f',
+                          color: '#daf7ee',
+                          '&:hover': { bgcolor: '#0f5e4f' },
+                        }}
+                      >
+                        ▶
+                      </UIButton>
+                    </span>
+                  </Tooltip>
+                )}
+              </Stack>
+            </>
+          ) : hasAudio ? (
+            <Stack spacing={1.1} sx={{ position: 'relative', pt: 0.5 }}>
               <UIButton
                 variant="text"
                 onClick={() => {
-                  void onReRecord();
+                  setClosePanelDialogOpen(true);
                 }}
-                disabled={!hasAudio}
-                data-testid="record-rerecord-button"
+                sx={{
+                  position: 'absolute',
+                  top: -10,
+                  right: -10,
+                  color: '#f2fff9',
+                  minWidth: 40,
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  border: '1px solid rgba(210, 255, 241, 0.45)',
+                  bgcolor: 'rgba(8, 53, 44, 0.45)',
+                  backdropFilter: 'blur(2px)',
+                  px: 0,
+                  lineHeight: 1,
+                  zIndex: 2,
+                  '&:hover': {
+                    bgcolor: 'rgba(8, 53, 44, 0.7)',
+                    borderColor: 'rgba(210, 255, 241, 0.7)',
+                  },
+                }}
               >
-                {t('recording.actions.rerecord')}
+                <Box
+                  component="svg"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  sx={{ width: 20, height: 20, display: 'block' }}
+                >
+                  <Box
+                    component="path"
+                    d="M6 6L18 18M18 6L6 18"
+                    sx={{
+                      stroke: 'currentColor',
+                      strokeWidth: 2.2,
+                      strokeLinecap: 'round',
+                    }}
+                  />
+                </Box>
               </UIButton>
-            </span>
-          </Tooltip>
-          <Tooltip
-            title={
-              !hasConsent
-                ? t('recording.tooltips.consentRequired')
-                : t('recording.tooltips.uploadAudio')
-            }
-          >
-            <span>
-              <UIButton
-                variant="outlined"
-                onClick={onUploadClick}
-                disabled={!hasConsent}
-                data-testid="record-upload-button"
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#e6fff7' }}>
+                  {formatAudioDuration(previewCurrentSeconds)}
+                </Typography>
+              </Stack>
+
+              <Box
+                sx={{
+                  borderRadius: 1,
+                  px: 1,
+                  py: 1.2,
+                  bgcolor: 'rgba(77, 201, 162, 0.22)',
+                }}
               >
-                {t('recording.actions.upload')}
-              </UIButton>
-            </span>
-          </Tooltip>
-          {process.env.NODE_ENV !== 'production' ? (
-            <UIButton
-              variant="text"
-              onClick={() => {
-                void onUseDemoAudio();
-              }}
-              data-testid="record-use-demo-audio-button"
-            >
-              {t('recording.actions.demo')}
-            </UIButton>
-          ) : null}
+                <Box
+                  onClick={(event) => {
+                    void onSeekPreviewAudio(event);
+                  }}
+                  sx={{
+                    position: 'relative',
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1px',
+                    height: 44,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      width: previewDurationSeconds > 0
+                        ? `${(previewCurrentSeconds / previewDurationSeconds) * 100}%`
+                        : 0,
+                      bgcolor: 'rgba(47, 224, 182, 0.12)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                  {waveformBars.map((height, index) => (
+                    <Box
+                      key={`bar-${index}`}
+                      sx={{
+                        position: 'relative',
+                        width: waveformBarWidth,
+                        flexShrink: 0,
+                        height,
+                        borderRadius: 99,
+                        bgcolor: '#2FE0B6',
+                        opacity:
+                          previewDurationSeconds > 0 &&
+                          index / waveformBars.length <
+                            previewCurrentSeconds / Math.max(1, previewDurationSeconds)
+                            ? 1
+                            : 0.5,
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#3fe6c4' }}>
+                  {formatAudioDuration(previewCurrentSeconds)}
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#3fe6c4' }}>
+                  {formatAudioDuration(previewDurationSeconds)}
+                </Typography>
+              </Stack>
+
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <UIButton
+                  onClick={() => {
+                    void onTogglePreviewAudio();
+                  }}
+                  sx={{
+                    borderRadius: 999,
+                    minWidth: 72,
+                    bgcolor: '#0b4f43',
+                    color: '#ffffff',
+                    '&:hover': { bgcolor: '#0b4f43' },
+                  }}
+                >
+                  {isPreviewPlaying ? t('recording.recorderPanel.pausePreview') : '▶'}
+                </UIButton>
+                <UIButton
+                  variant={isAudioSaved ? 'contained' : 'outlined'}
+                  onClick={() => {
+                    void onSaveAudioNow();
+                  }}
+                  sx={{
+                    borderRadius: 999,
+                    px: 3,
+                    borderColor: '#f4f6fb',
+                    color: isAudioSaved ? '#0f1f63' : '#f4f6fb',
+                    bgcolor: isAudioSaved ? '#f4f6fb' : 'transparent',
+                  }}
+                >
+                  {isAudioSaved
+                    ? t('recording.recorderPanel.savedButton')
+                    : t('recording.recorderPanel.saveButton')}
+                </UIButton>
+              </Stack>
+
+              <audio
+                ref={previewAudioRef}
+                src={audioDataUrl ?? undefined}
+                style={{ display: 'none' }}
+                onLoadedMetadata={(event) => {
+                  const duration = Number.isFinite(event.currentTarget.duration)
+                    ? event.currentTarget.duration
+                    : 0;
+                  setPreviewDurationSeconds(duration);
+                }}
+                onTimeUpdate={(event) => {
+                  setPreviewCurrentSeconds(event.currentTarget.currentTime || 0);
+                }}
+                onPause={() => setIsPreviewPlaying(false)}
+                onPlay={() => setIsPreviewPlaying(true)}
+                onEnded={() => {
+                  setIsPreviewPlaying(false);
+                  setPreviewCurrentSeconds(0);
+                }}
+              />
+            </Stack>
+          ) : (
+            <Stack spacing={4} sx={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                <Typography sx={{ color: 'rgba(228, 255, 246, 0.78)', fontSize: '1rem' }}>
+                  {t('recording.recorderPanel.idleHint')}
+                </Typography>
+                <Tooltip
+                  title={t('recording.tooltips.uploadAudio')}
+                >
+                  <span>
+                    <UIButton
+                      variant="outlined"
+                      onClick={onUploadClick}
+                      data-testid="record-upload-button"
+                      sx={{
+                        borderRadius: 999,
+                        px: 2,
+                        borderColor: 'rgba(185, 255, 234, 0.65)',
+                        color: '#e8fff8',
+                      }}
+                    >
+                      {t('recording.actions.upload')}
+                    </UIButton>
+                  </span>
+                </Tooltip>
+              </Stack>
+              <Tooltip
+                title={t('recording.tooltips.startRecording')}
+              >
+                <span>
+                    <UIButton
+                      onClick={() => {
+                        trackEvent('record_started');
+                        void recorder.startRecording();
+                      }}
+                      disabled={!recorder.canStart}
+                      data-testid="record-start-button"
+                    sx={{
+                      minWidth: 50,
+                      width: 50,
+                      height: 50,
+                      borderRadius: '50%',
+                      bgcolor: '#0b584a',
+                      color: '#ff1f57',
+                      fontSize: '1.4rem',
+                      '&:hover': { bgcolor: '#0b584a' },
+                    }}
+                  >
+                    ●
+                  </UIButton>
+                </span>
+              </Tooltip>
+            </Stack>
+          )}
+
           <input
             ref={fileInputRef}
             type="file"
-            accept="audio/*"
+            accept=".mp3,audio/*"
             style={{ display: 'none' }}
             data-testid="record-upload-input"
             onChange={(event) => {
               void onFileChange(event);
             }}
           />
-        </Stack>
+        </Box>
 
         <Alert severity="info">
           <Typography variant="body2">
@@ -739,49 +865,7 @@ export function StepRecording() {
           </Alert>
         ) : null}
 
-        {hasAudio ? (
-          <Box>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              {t('recording.sourcePrefix')} {audioSourceType}{' '}
-              {audioFileName ? `• ${audioFileName}` : ''}
-            </Typography>
-            {audioDataUrl ? (
-              <audio
-                controls
-                src={audioDataUrl}
-                style={{ width: '100%' }}
-                data-testid="record-audio-player"
-              />
-            ) : (
-              <Alert severity="info">{t('recording.restoringPreview')}</Alert>
-            )}
-          </Box>
-        ) : (
-          <Alert severity="info">{t('recording.noAudio')}</Alert>
-        )}
-
         <Divider />
-
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <Tooltip
-            title={
-              hasAudio ? t('recording.tooltips.deleteAudio') : t('recording.tooltips.audioNeeded')
-            }
-          >
-            <span>
-              <UIButton
-                variant="outlined"
-                color="error"
-                disabled={!hasAudio}
-                onClick={() => {
-                  setDeleteDialogOpen(true);
-                }}
-              >
-                {t('recording.actions.deleteAudioNow')}
-              </UIButton>
-            </span>
-          </Tooltip>
-        </Stack>
 
         <Box
           sx={{
@@ -807,23 +891,20 @@ export function StepRecording() {
           </Tooltip>
         </Box>
 
-        <Typography variant="caption" color="text.secondary" role="status" aria-live="polite">
-          {t('recording.liveStatus')} {statusLabel(recorder.state.status, t)}.
-        </Typography>
       </Stack>
 
       <UIConfirmDialog
-        open={isDeleteDialogOpen}
-        title={t('recording.deleteDialog.title')}
-        description={t('recording.deleteDialog.description')}
-        confirmLabel={t('recording.deleteDialog.confirm')}
-        cancelLabel={t('recording.deleteDialog.cancel')}
+        open={isClosePanelDialogOpen}
+        title={t('recording.closeDialog.title')}
+        description={t('recording.closeDialog.description')}
+        confirmLabel={t('recording.closeDialog.confirm')}
+        cancelLabel={t('recording.closeDialog.cancel')}
         onConfirm={() => {
-          setDeleteDialogOpen(false);
-          void onDeleteAudioNow();
+          setClosePanelDialogOpen(false);
+          void onReRecord();
         }}
         onCancel={() => {
-          setDeleteDialogOpen(false);
+          setClosePanelDialogOpen(false);
         }}
       />
     </UISectionCard>

@@ -9,16 +9,6 @@ export type AudioPayload = {
   audioSourceType: AudioSourceType;
 };
 
-export type RecordingHistoryItem = {
-  audioStorageKey: string;
-  audioMimeType: string;
-  audioFileName: string;
-  audioSourceType: AudioSourceType;
-  sizeBytes: number;
-  createdAt: number;
-  expiresAt: number;
-};
-
 export type NavigationSlice = {
   step: AssignmentStep;
   setStep: (step: AssignmentStep) => void;
@@ -41,13 +31,8 @@ export type AudioSlice = {
   audioMimeType: string | null;
   audioFileName: string | null;
   audioSourceType: AudioSourceType | null;
-  recordingHistory: RecordingHistoryItem[];
   setAudioPayload: (payload: AudioPayload) => void;
   setAudioDataUrl: (audioDataUrl: string | null) => void;
-  setRecordingHistory: (entries: RecordingHistoryItem[]) => void;
-  addRecordingHistoryEntry: (entry: RecordingHistoryItem) => void;
-  removeRecordingHistoryEntry: (audioStorageKey: string) => void;
-  clearRecordingHistory: () => void;
   clearAudioPayload: () => void;
 };
 

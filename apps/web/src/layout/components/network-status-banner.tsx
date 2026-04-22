@@ -1,16 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from '@workspace/localization';
-import { Alert } from '@workspace/ui';
+import { useUIToast } from '@workspace/ui';
 
 export function NetworkStatusBanner() {
   const { t } = useTranslation();
-  const [isOffline, setIsOffline] = useState(false);
+  const { showSuccess, showWarning } = useUIToast();
+  const hasShownInitialStatusRef = useRef(false);
+  const previousOnlineRef = useRef<boolean | null>(null);
 
   useEffect(() => {
+    const publishStatusToast = (isOnline: boolean) => {
+      if (!isOnline) {
+        showWarning(t('network.offline'));
+        return;
+      }
+
+      showSuccess(t('network.online'));
+    };
+
     const updateStatus = () => {
-      setIsOffline(!navigator.onLine);
+      const isOnline = navigator.onLine;
+
+      if (!hasShownInitialStatusRef.current) {
+        hasShownInitialStatusRef.current = true;
+        previousOnlineRef.current = isOnline;
+
+        if (!isOnline) {
+          publishStatusToast(false);
+        }
+
+        return;
+      }
+
+      if (previousOnlineRef.current === isOnline) {
+        return;
+      }
+
+      previousOnlineRef.current = isOnline;
+      publishStatusToast(isOnline);
     };
 
     updateStatus();
@@ -21,15 +50,7 @@ export function NetworkStatusBanner() {
       window.removeEventListener('online', updateStatus);
       window.removeEventListener('offline', updateStatus);
     };
-  }, []);
+  }, [showSuccess, showWarning, t]);
 
-  if (!isOffline) {
-    return null;
-  }
-
-  return (
-    <Alert severity="warning" data-testid="offline-banner">
-      {t('network.offline')}
-    </Alert>
-  );
+  return null;
 }

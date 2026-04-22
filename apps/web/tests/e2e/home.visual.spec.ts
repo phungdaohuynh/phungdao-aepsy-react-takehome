@@ -78,7 +78,11 @@ test.describe('visual snapshots', () => {
 
   test('step 3 visual', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('record-use-demo-audio-button').click();
+    await page.getByTestId('record-upload-input').setInputFiles({
+      name: 'voice-note.mp3',
+      mimeType: 'audio/mpeg',
+      buffer: Buffer.from('fake-audio'),
+    });
     await page.getByTestId('record-continue-button').click();
     await page.getByTestId('topic-chip-U_DIS_STRESS').click();
     await page.getByTestId('topics-continue-button').click();

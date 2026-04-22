@@ -8,6 +8,7 @@ type RecorderStatus =
   | 'requesting_permission'
   | 'ready'
   | 'recording'
+  | 'paused'
   | 'stopped'
   | 'error';
 
@@ -22,6 +23,8 @@ type RecorderEvent =
   | { type: 'REQUEST_PERMISSION' }
   | { type: 'READY' }
   | { type: 'START_RECORDING' }
+  | { type: 'PAUSE_RECORDING' }
+  | { type: 'RESUME_RECORDING' }
   | { type: 'STOP_RECORDING' }
   | { type: 'INTERRUPTED' }
   | { type: 'ERROR'; message: string }
@@ -48,6 +51,10 @@ function reducer(state: RecorderState, event: RecorderEvent): RecorderState {
     case 'READY':
       return { status: 'ready', error: null, interrupted: false };
     case 'START_RECORDING':
+      return { status: 'recording', error: null, interrupted: false };
+    case 'PAUSE_RECORDING':
+      return { status: 'paused', error: null, interrupted: false };
+    case 'RESUME_RECORDING':
       return { status: 'recording', error: null, interrupted: false };
     case 'STOP_RECORDING':
       return { status: 'stopped', error: null, interrupted: state.interrupted };
@@ -143,6 +150,12 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
           chunksRef.current.push(event.data);
         }
       });
+      recorder.addEventListener('pause', () => {
+        dispatch({ type: 'PAUSE_RECORDING' });
+      });
+      recorder.addEventListener('resume', () => {
+        dispatch({ type: 'RESUME_RECORDING' });
+      });
 
       recorder.addEventListener('stop', async () => {
         try {
@@ -220,10 +233,38 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
       return;
     }
 
-    if (recorder.state === 'recording') {
+    if (recorder.state === 'recording' || recorder.state === 'paused') {
       recorder.stop();
     }
   }, []);
+
+  const pauseRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+
+    if (!recorder || recorder.state !== 'recording') {
+      return;
+    }
+
+    try {
+      recorder.pause();
+    } catch {
+      onError?.('Unable to pause recording. Please continue or stop recording.');
+    }
+  }, [onError]);
+
+  const resumeRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+
+    if (!recorder || recorder.state !== 'paused') {
+      return;
+    }
+
+    try {
+      recorder.resume();
+    } catch {
+      onError?.('Unable to resume recording. Please stop and record again.');
+    }
+  }, [onError]);
 
   const handleAudioUpload = useCallback(
     async (file: File) => {
@@ -244,7 +285,10 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
   );
 
   const resetMachine = useCallback(() => {
-    if (mediaRecorderRef.current?.state === 'recording') {
+    if (
+      mediaRecorderRef.current?.state === 'recording' ||
+      mediaRecorderRef.current?.state === 'paused'
+    ) {
       mediaRecorderRef.current.stop();
     }
 
@@ -271,7 +315,10 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
     };
 
     const onBeforeUnload = () => {
-      if (mediaRecorderRef.current?.state === 'recording') {
+      if (
+        mediaRecorderRef.current?.state === 'recording' ||
+        mediaRecorderRef.current?.state === 'paused'
+      ) {
         interruptionRef.current = true;
         window.sessionStorage.setItem(RECORDING_INTERRUPTED_SESSION_KEY, '1');
         mediaRecorderRef.current.stop();
@@ -285,7 +332,10 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('beforeunload', onBeforeUnload);
 
-      if (mediaRecorderRef.current?.state === 'recording') {
+      if (
+        mediaRecorderRef.current?.state === 'recording' ||
+        mediaRecorderRef.current?.state === 'paused'
+      ) {
         mediaRecorderRef.current.stop();
       }
 
@@ -294,14 +344,23 @@ export function useAudioRecorderMachine({ onAudioReady, onError }: UseAudioRecor
   }, [clearRecorder]);
 
   const canStart = useMemo(
-    () => state.status !== 'recording' && state.status !== 'requesting_permission',
+    () =>
+      state.status !== 'recording' &&
+      state.status !== 'paused' &&
+      state.status !== 'requesting_permission',
     [state.status],
   );
+  const canPause = useMemo(() => state.status === 'recording', [state.status]);
+  const canResume = useMemo(() => state.status === 'paused', [state.status]);
 
   return {
     state,
     canStart,
+    canPause,
+    canResume,
     startRecording,
+    pauseRecording,
+    resumeRecording,
     stopRecording,
     resetMachine,
     handleAudioUpload,

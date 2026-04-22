@@ -10,9 +10,26 @@ type UISiteFooterProps = {
 
 export function UISiteFooter({ text }: UISiteFooterProps) {
   return (
-    <Box component="footer" sx={{ borderTop: '1px solid', borderColor: 'divider', mt: 4 }}>
-      <Container maxWidth="lg" sx={{ py: 2.5 }}>
-        <Typography variant="body2" color="text.secondary" align="center">
+    <Box
+      component="footer"
+      sx={{
+        borderTop: '1px solid',
+        borderColor: 'divider',
+        mt: 0,
+        height: { xs: 32, md: 34 },
+        minHeight: { xs: 32, md: 34 },
+      }}
+    >
+      <Container
+        maxWidth="lg"
+        sx={{
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography variant="body2" color="text.secondary" align="center" noWrap>
           {text}
         </Typography>
       </Container>

@@ -2,6 +2,8 @@ export function statusLabel(status: string, t: (key: string) => string) {
   switch (status) {
     case 'recording':
       return t('recording.status.recording');
+    case 'paused':
+      return t('recording.status.paused');
     case 'requesting_permission':
       return t('recording.status.requestingPermission');
     case 'stopped':
@@ -18,6 +20,7 @@ export function statusLabel(status: string, t: (key: string) => string) {
 export function statusColor(status: string): 'default' | 'success' | 'error' | 'warning' {
   switch (status) {
     case 'recording':
+    case 'paused':
       return 'warning';
     case 'stopped':
       return 'success';

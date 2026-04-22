@@ -3,25 +3,13 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from '@workspace/localization';
-import { Alert, Box, Container, Stack, Typography, UIStepProgress } from '@workspace/ui';
+import { Alert, Container, Stack, Typography, UIStepProgress } from '@workspace/ui';
 
 import { ASSIGNMENT_STEPS } from '@/shared/constants/steps';
 import { StepRecording } from '@/features/recording/components/step-recording';
 import { useAppStore } from '@/shared/state/store';
-import { IntakeSummaryBar } from '@/layout/components/intake-summary-bar';
 import { NetworkStatusBanner } from '@/layout/components/network-status-banner';
 import { ResumeDraftBanner } from '@/layout/components/resume-draft-banner';
-
-const AnalyticsDevDashboardLazy =
-  process.env.NODE_ENV !== 'production'
-    ? dynamic(
-        () =>
-          import('@/layout/components/analytics-dev-dashboard').then((module) => ({
-            default: module.AnalyticsDevDashboard,
-          })),
-        { ssr: false },
-      )
-    : null;
 
 const StepTopicsLazy = dynamic(
   () =>
@@ -75,18 +63,17 @@ export function StepShell() {
     <Container maxWidth="md" sx={{ pt: 2, pb: { xs: 3, md: 4 } }}>
       <Stack spacing={2} data-testid={`step-shell-${resolvedStep}`}>
         <Typography
-          variant="body2"
+          variant="h6"
           component="h1"
-          sx={{ fontWeight: 600, color: 'text.secondary' }}
+          sx={{ fontSize: { xs: '1.125rem', md: '1.25rem' }, fontWeight: 600, color: 'text.secondary' }}
         >
           {t('heroTitle')}
         </Typography>
 
-        <Box sx={{ minHeight: 56 }}>
+        <Stack spacing={1}>
           <NetworkStatusBanner />
           <ResumeDraftBanner />
-        </Box>
-        <IntakeSummaryBar />
+        </Stack>
 
         <UIStepProgress
           steps={ASSIGNMENT_STEPS.map((item) => ({
@@ -107,7 +94,6 @@ export function StepShell() {
 
         {resolvedStep === 'psychologists' ? <StepPsychologistsLazy /> : null}
 
-        {AnalyticsDevDashboardLazy ? <AnalyticsDevDashboardLazy /> : null}
       </Stack>
     </Container>
   );

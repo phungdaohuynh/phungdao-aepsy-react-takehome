@@ -78,11 +78,21 @@ async function mockGraphql(page: Page) {
 async function mockRecordingApis(page: Page) {
   await page.addInitScript(() => {
     class FakeMediaRecorder extends EventTarget {
-      public state: 'inactive' | 'recording' = 'inactive';
+      public state: 'inactive' | 'recording' | 'paused' = 'inactive';
       public mimeType = 'audio/webm';
 
       start() {
         this.state = 'recording';
+      }
+
+      pause() {
+        this.state = 'paused';
+        this.dispatchEvent(new Event('pause'));
+      }
+
+      resume() {
+        this.state = 'recording';
+        this.dispatchEvent(new Event('resume'));
       }
 
       stop() {
@@ -112,12 +122,20 @@ async function mockRecordingApis(page: Page) {
   });
 }
 
+async function attachAudioFile(page: Page) {
+  await page.getByTestId('record-upload-input').setInputFiles({
+    name: 'voice-note.mp3',
+    mimeType: 'audio/mpeg',
+    buffer: Buffer.from('fake-audio'),
+  });
+}
+
 test('happy path: step 1 -> step 2 -> step 3 with load more', async ({ page }) => {
   await mockGraphql(page);
   await page.goto('/');
-  await page.getByTestId('record-use-demo-audio-button').click();
+  await attachAudioFile(page);
 
-  await expect(page.getByTestId('record-audio-player')).toBeVisible();
+  await expect(page.getByTestId('record-continue-button')).toBeEnabled();
   await page.getByTestId('record-continue-button').click();
 
   await expect(page.getByTestId('step-topics')).toBeVisible();
@@ -135,7 +153,7 @@ test('happy path: step 1 -> step 2 -> step 3 with load more', async ({ page }) =
 test('refresh keeps progress on step 3', async ({ page }) => {
   await mockGraphql(page);
   await page.goto('/');
-  await page.getByTestId('record-use-demo-audio-button').click();
+  await attachAudioFile(page);
   await page.getByTestId('record-continue-button').click();
 
   await expect(page.getByTestId('step-topics')).toBeVisible();
@@ -154,17 +172,9 @@ test('upload audio file and restore draft banner', async ({ page }) => {
   await mockGraphql(page);
   await page.goto('/');
   await expect(page.getByTestId('step-recording')).toBeVisible();
+  await attachAudioFile(page);
 
-  const uploadInput = page.getByTestId('record-upload-input');
-  await expect(uploadInput).toBeAttached();
-
-  await uploadInput.setInputFiles({
-    name: 'voice-note.mp3',
-    mimeType: 'audio/mpeg',
-    buffer: Buffer.from('fake-audio'),
-  });
-
-  await expect(page.getByTestId('record-audio-player')).toBeVisible();
+  await expect(page.getByTestId('record-continue-button')).toBeEnabled();
   await page.getByTestId('record-continue-button').click();
   await expect(page.getByTestId('step-topics')).toBeVisible();
 
@@ -181,7 +191,6 @@ test('refresh during recording shows interruption warning and keeps app stable',
   await mockRecordingApis(page);
   await page.goto('/');
 
-  await page.getByRole('button', { name: 'Enable consent' }).click();
   await page.getByTestId('record-start-button').click();
   await page.reload();
 
@@ -189,6 +198,21 @@ test('refresh during recording shows interruption warning and keeps app stable',
     page.getByText('Recording was interrupted. Please review and record again if needed.'),
   ).toBeVisible();
   await expect(page.getByTestId('step-recording')).toBeVisible();
+});
+
+test('supports pause and resume while recording', async ({ page }) => {
+  await mockGraphql(page);
+  await mockRecordingApis(page);
+  await page.goto('/');
+
+  await page.getByTestId('record-start-button').click();
+  await expect(page.getByTestId('record-pause-button')).toBeVisible();
+
+  await page.getByTestId('record-pause-button').click();
+  await expect(page.getByTestId('record-resume-button')).toBeVisible();
+
+  await page.getByTestId('record-resume-button').click();
+  await expect(page.getByTestId('record-pause-button')).toBeVisible();
 });
 
 test('indexeddb unavailable shows storage error without crashing', async ({ page }) => {
@@ -201,11 +225,14 @@ test('indexeddb unavailable shows storage error without crashing', async ({ page
   });
   await page.goto('/');
 
-  await page.getByRole('button', { name: 'Enable consent' }).click();
-  await page.getByTestId('record-use-demo-audio-button').click();
+  await page.getByTestId('record-upload-input').setInputFiles({
+    name: 'voice-note.mp3',
+    mimeType: 'audio/mpeg',
+    buffer: Buffer.from('fake-audio'),
+  });
 
   await expect(
-    page.getByText('Local audio storage is unavailable in this environment.'),
+    page.getByText('Local audio storage is unavailable in this environment.').first(),
   ).toBeVisible();
   await expect(page.getByTestId('step-recording')).toBeVisible();
 });

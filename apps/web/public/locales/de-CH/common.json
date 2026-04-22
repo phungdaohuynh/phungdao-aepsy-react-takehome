@@ -9,12 +9,6 @@
     "loadMore": "Mehr laden",
     "loadingMore": "Lädt mehr..."
   },
-  "summary": {
-    "audioReady": "Audio bereit",
-    "audioMissing": "Audio fehlt",
-    "topicsSelected": "Themen: {{count}}",
-    "currentStep": "Schritt: {{step}}"
-  },
   "language": {
     "label": "Sprache",
     "options": {
@@ -31,7 +25,8 @@
     "requireTopicBeforeSearch": "Bitte wähle mindestens ein Thema aus, bevor du nach Psychologinnen suchst."
   },
   "network": {
-    "offline": "Du bist offline. Einige Aktionen können fehlschlagen, bis die Verbindung wiederhergestellt ist."
+    "offline": "Du bist offline. Einige Aktionen können fehlschlagen, bis die Verbindung wiederhergestellt ist.",
+    "online": "Verbindung wiederhergestellt. Du kannst jetzt sicher weitermachen."
   },
   "resume": {
     "clearDraft": "Entwurf löschen",
@@ -55,6 +50,12 @@
     "sourcePrefix": "Quelle:",
     "liveStatus": "Recorder-Status:",
     "guidedPromptLabel": "Vorgeschlagene Einstiegsfrage",
+    "recorderPanel": {
+      "idleHint": "Tippe auf den Button, um die Aufnahme zu starten.",
+      "pausePreview": "Pausieren",
+      "saveButton": "Speichern",
+      "savedButton": "Gespeichert"
+    },
     "consent": {
       "title": "Bitte bestätige vor der Aufnahme, dass Audio für Themenvorschläge verarbeitet werden darf.",
       "enable": "Einwilligung aktivieren",
@@ -69,6 +70,7 @@
     },
     "status": {
       "recording": "Aufnahme läuft",
+      "paused": "Pausiert",
       "requestingPermission": "Berechtigung wird angefragt",
       "audioReady": "Audio bereit",
       "notSupported": "Nicht unterstützt",
@@ -78,9 +80,11 @@
     "actions": {
       "start": "Aufnahme starten",
       "stop": "Aufnahme stoppen",
+      "complete": "Aufnahme abschließen",
+      "pause": "Pausieren",
+      "resume": "Fortsetzen",
       "rerecord": "Neu aufnehmen",
       "upload": "Audio hochladen",
-      "demo": "Demo-Audio verwenden",
       "continue": "Weiter zu Themenvorschlägen",
       "prevPrompt": "Vorherige Frage",
       "nextPrompt": "Nächste Frage",
@@ -91,13 +95,6 @@
     },
     "longUpload": {
       "status": "Verarbeitung großer Datei {{status}} ({{progress}}%)"
-    },
-    "history": {
-      "title": "Letzte Aufnahmen",
-      "subheader": "{{count}} gespeicherte Datei(en), automatische Bereinigung nach 72 Stunden",
-      "clearAll": "Alle löschen",
-      "restore": "Wiederherstellen",
-      "remove": "Entfernen"
     },
     "tooltips": {
       "consentRequired": "Bitte zuerst Einwilligung aktivieren.",
@@ -114,6 +111,12 @@
       "confirm": "Löschen",
       "cancel": "Abbrechen"
     },
+    "closeDialog": {
+      "title": "Diese Aufnahme schließen?",
+      "description": "Dadurch wird die fertige Aufnahme geschlossen und das aktuelle Audio zurückgesetzt.",
+      "confirm": "Aufnahme schließen",
+      "cancel": "Behalten"
+    },
     "toast": {
       "operationFailed": "Aktion fehlgeschlagen. Bitte erneut versuchen.",
       "uploadedSuccess": "Audiodatei erfolgreich hochgeladen.",
@@ -122,14 +125,11 @@
       "tooLargeFile": "Datei ist für den Sofortmodus zu groß. Der große Upload-Modus wird automatisch verwendet.",
       "tooLargeForLongUpload": "Datei zu groß. Maximal unterstützt sind 1 GB.",
       "cleared": "Vorheriges Audio gelöscht. Du kannst erneut aufnehmen.",
-      "demoLoaded": "Demo-Audio geladen.",
       "audioDeleted": "Gespeichertes Audio wurde gelöscht.",
       "longUploadStarted": "Große Datei erkannt. Worker-Verarbeitung wird gestartet...",
       "longUploadSuccess": "Verarbeitung großer Datei erfolgreich abgeschlossen.",
       "longUploadFailed": "Verarbeitung großer Datei fehlgeschlagen. Bitte erneut versuchen oder kleinere Datei nutzen.",
-      "historyMissing": "Dieses gespeicherte Audio ist nicht mehr verfügbar.",
-      "historyRestored": "Gespeichertes Audio wiederhergestellt.",
-      "historyCleared": "Aufnahmeverlauf gelöscht."
+      "saved": "Audiodatei heruntergeladen."
     }
   },
   "topics": {

@@ -62,7 +62,13 @@ export function UIToastProvider({ children }: PropsWithChildren) {
           onClose={closeToast}
           severity={toast?.severity ?? 'info'}
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{
+            width: '100%',
+            '&&': { color: 'common.white' },
+            '&& .MuiAlert-message': { color: 'common.white' },
+            '&& .MuiAlert-icon': { color: 'common.white' },
+            '&& .MuiAlert-action .MuiButtonBase-root': { color: 'common.white' },
+          }}
         >
           {toast?.message}
         </Alert>

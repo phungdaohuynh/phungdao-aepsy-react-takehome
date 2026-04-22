@@ -9,12 +9,6 @@
     "loadMore": "Load More",
     "loadingMore": "Loading more..."
   },
-  "summary": {
-    "audioReady": "Audio ready",
-    "audioMissing": "Audio missing",
-    "topicsSelected": "Topics: {{count}}",
-    "currentStep": "Step: {{step}}"
-  },
   "language": {
     "label": "Language",
     "options": {
@@ -31,7 +25,8 @@
     "requireTopicBeforeSearch": "Please select at least one topic before searching psychologists."
   },
   "network": {
-    "offline": "You are offline. Some actions may fail until your connection is restored."
+    "offline": "You are offline. Some actions may fail until your connection is restored.",
+    "online": "Your connection is back. You can continue safely."
   },
   "resume": {
     "clearDraft": "Clear draft",
@@ -55,6 +50,12 @@
     "sourcePrefix": "Source:",
     "liveStatus": "Recorder status:",
     "guidedPromptLabel": "Suggested opening prompt",
+    "recorderPanel": {
+      "idleHint": "Tap the button to start recording or",
+      "pausePreview": "Pause",
+      "saveButton": "Save",
+      "savedButton": "Saved"
+    },
     "consent": {
       "title": "Before recording, confirm you agree to process this audio for topic suggestions.",
       "enable": "Enable consent",
@@ -69,6 +70,7 @@
     },
     "status": {
       "recording": "Recording",
+      "paused": "Paused",
       "requestingPermission": "Requesting Permission",
       "audioReady": "Audio Ready",
       "notSupported": "Not Supported",
@@ -78,9 +80,11 @@
     "actions": {
       "start": "Start Recording",
       "stop": "Stop Recording",
+      "complete": "Finish recording",
+      "pause": "Pause",
+      "resume": "Resume",
       "rerecord": "Re-record",
       "upload": "Upload Audio",
-      "demo": "Use Demo Audio",
       "continue": "Continue to Topic Suggestions",
       "prevPrompt": "Previous prompt",
       "nextPrompt": "Next prompt",
@@ -91,13 +95,6 @@
     },
     "longUpload": {
       "status": "Large file processing {{status}} ({{progress}}%)"
-    },
-    "history": {
-      "title": "Recent recordings",
-      "subheader": "{{count}} saved item(s), auto-cleaned after 72 hours",
-      "clearAll": "Clear all",
-      "restore": "Restore",
-      "remove": "Remove"
     },
     "tooltips": {
       "consentRequired": "Enable consent before recording or uploading.",
@@ -114,6 +111,12 @@
       "confirm": "Delete",
       "cancel": "Cancel"
     },
+    "closeDialog": {
+      "title": "Close this recording?",
+      "description": "This will close the completed recording and reset the current audio.",
+      "confirm": "Close recording",
+      "cancel": "Keep it"
+    },
     "toast": {
       "operationFailed": "Action failed. Please try again.",
       "uploadedSuccess": "Audio file uploaded successfully.",
@@ -122,14 +125,11 @@
       "tooLargeFile": "Audio file is too large for instant mode. Large file mode will be used automatically.",
       "tooLargeForLongUpload": "File too large. Maximum supported size is 1 GB.",
       "cleared": "Previous audio cleared. You can record again.",
-      "demoLoaded": "Demo audio loaded.",
       "audioDeleted": "Saved audio removed.",
       "longUploadStarted": "Large file detected. Starting worker processing mode...",
       "longUploadSuccess": "Large file processing completed successfully.",
       "longUploadFailed": "Large file processing failed. Please retry or use a smaller file.",
-      "historyMissing": "This saved audio is no longer available.",
-      "historyRestored": "Saved audio restored.",
-      "historyCleared": "Recording history cleared."
+      "saved": "Audio file downloaded."
     }
   },
   "topics": {
