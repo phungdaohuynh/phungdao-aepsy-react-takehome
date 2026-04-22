@@ -41,7 +41,7 @@
     "title": "Step 1 - Voice Note",
     "subheader": "Record a voice note or upload an existing audio file",
     "description": "The recorder handles permission denial, tab interruption, and re-record flows to keep state stable.",
-    "uploadPolicy": "Small files are handled instantly up to {{smallMb}} MB. Larger files run local worker processing up to {{largeMb}} MB.",
+    "uploadPolicy": "Small files are handled instantly up to {{smallMb}} MB. Larger files are processed in the browser up to {{largeMb}} MB.",
     "interrupted": "Recording was interrupted. Please review and record again if needed.",
     "notSavedUntilStopped": "Recording is not saved until you press Stop.",
     "largeUploadInterruptedAfterRefresh": "Large-file processing was interrupted by refresh. Please upload the file again to continue.",
@@ -122,13 +122,13 @@
       "uploadedSuccess": "Audio file uploaded successfully.",
       "recordedSuccess": "Voice note recorded successfully.",
       "invalidAudio": "Please upload a valid audio file.",
-      "tooLargeFile": "Audio file is too large for instant mode. Large file mode will be used automatically.",
+      "tooLargeFile": "Audio file is too large for instant mode. It will be processed in large file mode automatically.",
       "tooLargeForLongUpload": "File too large. Maximum supported size is 1 GB.",
       "cleared": "Previous audio cleared. You can record again.",
       "audioDeleted": "Saved audio removed.",
-      "longUploadStarted": "Large file detected. Starting worker processing mode...",
-      "longUploadSuccess": "Large file processing completed successfully.",
-      "longUploadFailed": "Large file processing failed. Please retry or use a smaller file.",
+      "longUploadStarted": "Large file detected. Processing started...",
+      "longUploadSuccess": "Large file processed successfully.",
+      "longUploadFailed": "Large file processing failed. Please try again or use a smaller file.",
       "saved": "Audio file downloaded."
     }
   },
@@ -172,7 +172,7 @@
   },
   "psychologists": {
     "title": "Step 3 - Psychologist Search",
-    "subheader": "Endpoint: {{endpoint}} • Selected topics: {{count}}",
+    "subheader": "Selected topics: {{count}}",
     "loading": "Finding matching psychologists...",
     "error": "Failed to load psychologists. Please verify the GraphQL endpoint and selected topics.",
     "emptyTitle": "No psychologists found",
@@ -208,7 +208,10 @@
       "description": "Compare selected providers side-by-side before deciding.",
       "empty": "No psychologists selected for compare yet.",
       "close": "Close",
-      "clear": "Clear selection"
+      "clear": "Clear selection",
+      "remove": "Remove",
+      "reasons": "Reasons",
+      "tags": "Tags"
     },
     "toast": {
       "maxCompare": "You can compare up to 3 psychologists.",
@@ -223,7 +226,7 @@
     },
     "tooltips": {
       "selectForCompare": "Select at least one psychologist to compare.",
-      "openCompare": "Open compare drawer for selected psychologists.",
+      "openCompare": "Show compare panel for selected psychologists.",
       "addToCompare": "Add this psychologist to compare list.",
       "removeFromCompare": "Remove this psychologist from compare list.",
       "requestSession": "Mock action to simulate booking intent.",

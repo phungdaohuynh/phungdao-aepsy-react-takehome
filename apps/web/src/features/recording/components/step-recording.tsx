@@ -1,6 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type MouseEvent,
+} from 'react';
 import { useTranslation } from '@workspace/localization';
 import {
   Alert,
@@ -78,6 +86,92 @@ const toFileExtensionFromMime = (mimeType: string) => {
   return null;
 };
 
+const inferAudioMimeType = (file: File) => {
+  if (file.type.startsWith('audio/')) {
+    return file.type;
+  }
+
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  switch (extension) {
+    case 'mp3':
+      return 'audio/mpeg';
+    case 'wav':
+      return 'audio/wav';
+    case 'm4a':
+      return 'audio/mp4';
+    case 'webm':
+      return 'audio/webm';
+    case 'ogg':
+      return 'audio/ogg';
+    case 'aac':
+      return 'audio/aac';
+    case 'flac':
+      return 'audio/flac';
+    default:
+      return null;
+  }
+};
+
+const validatePlayableAudio = async (file: File, timeoutMs = 12_000) => {
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const audio = document.createElement('audio');
+      let settled = false;
+
+      const cleanup = () => {
+        audio.removeAttribute('src');
+        audio.load();
+      };
+
+      const finishResolve = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      const finishReject = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        reject(new Error('Invalid audio file.'));
+      };
+
+      const timeoutId = window.setTimeout(() => {
+        finishReject();
+      }, timeoutMs);
+
+      audio.preload = 'metadata';
+      audio.onloadedmetadata = () => {
+        window.clearTimeout(timeoutId);
+        if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+          finishReject();
+          return;
+        }
+        finishResolve();
+      };
+      audio.onerror = () => {
+        window.clearTimeout(timeoutId);
+        finishReject();
+      };
+      audio.src = objectUrl;
+      audio.load();
+    });
+
+    return true;
+  } catch {
+    return false;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+};
+
 export function StepRecording() {
   const { t } = useTranslation();
   const toast = useUIToast();
@@ -88,6 +182,7 @@ export function StepRecording() {
   const [previewDurationSeconds, setPreviewDurationSeconds] = useState(0);
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
   const [isAudioSaved, setIsAudioSaved] = useState(false);
+  const [isDragOverRecorder, setIsDragOverRecorder] = useState(false);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [showLargeUploadInterruptionWarning, setShowLargeUploadInterruptionWarning] = useState(
     () => {
@@ -329,35 +424,37 @@ export function StepRecording() {
     return t(fallbackKey);
   };
 
-  const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
+  const processAudioFile = async (file: File | null) => {
     if (!file) {
       return;
     }
 
     const isAudioByMime = file.type.startsWith('audio/');
-    const isMp3ByName = /\.mp3$/i.test(file.name);
+    const isAudioByName = /\.(mp3|wav|m4a|webm|ogg|aac|flac)$/i.test(file.name);
+    const inferredMimeType = inferAudioMimeType(file);
 
-    if (!isAudioByMime && !isMp3ByName) {
+    if (!isAudioByMime && !isAudioByName) {
       toast.showError(t('recording.toast.invalidAudio'));
-      event.target.value = '';
       return;
     }
 
     if (file.size > VERY_LARGE_UPLOAD_MAX_BYTES) {
       toast.showError(t('recording.toast.tooLargeForLongUpload'));
-      event.target.value = '';
       return;
     }
 
     if (file.size <= SMALL_UPLOAD_MAX_BYTES) {
       await recorder.handleAudioUpload(file);
-      event.target.value = '';
       return;
     }
 
     toast.showInfo(t('recording.toast.longUploadStarted'));
+
+    const isPlayableAudio = await validatePlayableAudio(file);
+    if (!isPlayableAudio) {
+      toast.showError(t('recording.toast.invalidAudio'));
+      return;
+    }
 
     try {
       const result = await largeUpload.uploadFile(file);
@@ -369,34 +466,66 @@ export function StepRecording() {
       const previewBlob = file.slice(
         0,
         Math.min(file.size, LARGE_UPLOAD_PREVIEW_BYTES),
-        file.type || 'audio/mpeg',
+        inferredMimeType || 'audio/mpeg',
       );
       const nextAudioStorageKey = await saveAudioBlob(previewBlob);
-      const previewUrl = URL.createObjectURL(previewBlob);
+      const previewUrl = URL.createObjectURL(file);
 
       clearSelectedTopics();
       setAudioPayload({
         audioDataUrl: previewUrl,
         audioStorageKey: nextAudioStorageKey,
-        audioMimeType: file.type || 'audio/mpeg',
+        audioMimeType: inferredMimeType || 'audio/mpeg',
         audioFileName: file.name,
         audioSourceType: 'uploaded',
       });
 
       trackEvent('audio_uploaded', {
-        mimeType: file.type || 'audio/mpeg',
+        mimeType: inferredMimeType || 'audio/mpeg',
         sizeMb: Number((file.size / (1024 * 1024)).toFixed(1)),
         mode: 'large_worker',
         session: result.sessionId,
         digest: result.digest,
       });
-      toast.showSuccess(t('recording.toast.longUploadSuccess'));
+      toast.showSuccess(t('recording.toast.uploadedSuccess'));
 
     } catch (error) {
       toast.showError(toErrorMessage(error, 'recording.toast.longUploadFailed'));
     }
+  };
 
+  const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+
+    await processAudioFile(file);
     event.target.value = '';
+  };
+
+  const onRecorderDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (!isDragOverRecorder) {
+      setIsDragOverRecorder(true);
+    }
+  };
+
+  const onRecorderDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      return;
+    }
+    setIsDragOverRecorder(false);
+  };
+
+  const onRecorderDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOverRecorder(false);
+
+    if (isRecordingMode) {
+      toast.showInfo(t('recording.notSavedUntilStopped'));
+      return;
+    }
+
+    const file = event.dataTransfer.files?.[0] ?? null;
+    await processAudioFile(file);
   };
 
   const onReRecord = async () => {
@@ -451,18 +580,46 @@ export function StepRecording() {
         {recorder.state.error ? <Alert severity="error">{recorder.state.error}</Alert> : null}
 
         <Box
+          onDragOver={onRecorderDragOver}
+          onDragEnter={onRecorderDragOver}
+          onDragLeave={onRecorderDragLeave}
+          onDrop={(event) => {
+            void onRecorderDrop(event);
+          }}
           sx={{
             borderRadius: 2,
             minHeight: { xs: 220, md: 250 },
             px: { xs: 2, md: 3 },
             py: { xs: 2.5, md: 3 },
+            position: 'relative',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: isRecordingMode ? 'space-between' : 'center',
-            bgcolor: '#155f53',
-            backgroundImage: 'linear-gradient(180deg, #1f9a80 0%, #145f53 100%)',
+            bgcolor: 'recording.dark',
+            backgroundImage: (theme) =>
+              `linear-gradient(180deg, ${theme.palette.recording.main} 0%, ${theme.palette.recording.dark} 100%)`,
+            outline: isDragOverRecorder ? '2px dashed' : 'none',
+            outlineColor: isDragOverRecorder ? 'recording.light' : 'transparent',
+            outlineOffset: isDragOverRecorder ? '-8px' : 0,
+            boxShadow: isDragOverRecorder ? (theme) => theme.shadows[6] : 'none',
+            transition: 'outline-color 120ms ease, box-shadow 120ms ease',
           }}
         >
+          {isDragOverRecorder ? (
+            <Typography
+              sx={{
+                position: 'absolute',
+                top: 12,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                color: 'common.white',
+                fontWeight: 600,
+                pointerEvents: 'none',
+              }}
+            >
+              {t('recording.actions.upload')}
+            </Typography>
+          ) : null}
           {isRecordingMode ? (
             <>
               <Box sx={{ pt: 1 }}>
@@ -470,7 +627,7 @@ export function StepRecording() {
                   sx={{
                     position: 'relative',
                     height: 1,
-                    bgcolor: 'rgba(121, 229, 194, 0.45)',
+                    bgcolor: 'action.selected',
                   }}
                 >
                   <Box
@@ -480,7 +637,7 @@ export function StepRecording() {
                       left: 0,
                       height: 2,
                       width: `${4 + ((recordingElapsedSeconds * 8) % 96)}%`,
-                      bgcolor: '#2FE0B6',
+                      bgcolor: 'recording.light',
                       borderRadius: 99,
                     }}
                   />
@@ -497,14 +654,27 @@ export function StepRecording() {
                         borderRadius: 999,
                         minHeight: 44,
                         px: 2,
-                        bgcolor: '#0b4f43',
-                        color: '#ff1f57',
-                        '&:hover': { bgcolor: '#0b4f43' },
+                        bgcolor: 'success.dark',
+                        color: 'error.main',
+                        transition: 'transform 120ms ease, box-shadow 120ms ease, filter 120ms ease',
+                        '&:hover': {
+                          bgcolor: 'success.dark',
+                          boxShadow: (theme) => theme.shadows[6],
+                          filter: 'brightness(1.04)',
+                        },
+                        '&:active': {
+                          transform: 'translateY(1px) scale(0.98)',
+                          boxShadow: (theme) => theme.shadows[2],
+                        },
+                        '&:focus-visible': {
+                          outline: (theme) => `2px solid ${theme.palette.primary.light}`,
+                          outlineOffset: 2,
+                        },
                       }}
                     >
                       <Stack direction="row" spacing={0.8} sx={{ alignItems: 'center' }}>
-                        <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: '#ff1f57' }} />
-                        <Typography sx={{ color: '#ff1f57', fontWeight: 700 }}>
+                        <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: 'error.main' }} />
+                        <Typography sx={{ color: 'error.main', fontWeight: 700 }}>
                           {formatRecordingElapsed(recordingElapsedSeconds)}
                         </Typography>
                       </Stack>
@@ -524,9 +694,22 @@ export function StepRecording() {
                           width: 44,
                           height: 44,
                           borderRadius: '50%',
-                          bgcolor: '#0f5e4f',
-                          color: '#daf7ee',
-                          '&:hover': { bgcolor: '#0f5e4f' },
+                          bgcolor: 'success.main',
+                          color: 'common.white',
+                          transition: 'transform 120ms ease, box-shadow 120ms ease, filter 120ms ease',
+                          '&:hover': {
+                            bgcolor: 'success.main',
+                            boxShadow: (theme) => theme.shadows[6],
+                            filter: 'brightness(1.05)',
+                          },
+                          '&:active': {
+                            transform: 'translateY(1px) scale(0.96)',
+                            boxShadow: (theme) => theme.shadows[2],
+                          },
+                          '&:focus-visible': {
+                            outline: (theme) => `2px solid ${theme.palette.primary.light}`,
+                            outlineOffset: 2,
+                          },
                         }}
                       >
                         II
@@ -545,9 +728,22 @@ export function StepRecording() {
                           width: 44,
                           height: 44,
                           borderRadius: '50%',
-                          bgcolor: '#0f5e4f',
-                          color: '#daf7ee',
-                          '&:hover': { bgcolor: '#0f5e4f' },
+                          bgcolor: 'success.main',
+                          color: 'common.white',
+                          transition: 'transform 120ms ease, box-shadow 120ms ease, filter 120ms ease',
+                          '&:hover': {
+                            bgcolor: 'success.main',
+                            boxShadow: (theme) => theme.shadows[6],
+                            filter: 'brightness(1.05)',
+                          },
+                          '&:active': {
+                            transform: 'translateY(1px) scale(0.96)',
+                            boxShadow: (theme) => theme.shadows[2],
+                          },
+                          '&:focus-visible': {
+                            outline: (theme) => `2px solid ${theme.palette.primary.light}`,
+                            outlineOffset: 2,
+                          },
                         }}
                       >
                         ▶
@@ -568,20 +764,25 @@ export function StepRecording() {
                   position: 'absolute',
                   top: -10,
                   right: -10,
-                  color: '#f2fff9',
+                  color: 'common.white',
                   minWidth: 40,
                   width: 40,
                   height: 40,
                   borderRadius: '50%',
-                  border: '1px solid rgba(210, 255, 241, 0.45)',
-                  bgcolor: 'rgba(8, 53, 44, 0.45)',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'action.selected',
                   backdropFilter: 'blur(2px)',
                   px: 0,
                   lineHeight: 1,
                   zIndex: 2,
+                  transition: 'transform 120ms ease, background-color 120ms ease, border-color 120ms ease',
                   '&:hover': {
-                    bgcolor: 'rgba(8, 53, 44, 0.7)',
-                    borderColor: 'rgba(210, 255, 241, 0.7)',
+                    bgcolor: 'action.selected',
+                    borderColor: 'text.secondary',
+                  },
+                  '&:active': {
+                    transform: 'translateY(1px) scale(0.96)',
                   },
                 }}
               >
@@ -603,7 +804,7 @@ export function StepRecording() {
                 </Box>
               </UIButton>
               <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="caption" sx={{ color: '#e6fff7' }}>
+                <Typography variant="caption" sx={{ color: 'common.white' }}>
                   {formatAudioDuration(previewCurrentSeconds)}
                 </Typography>
               </Stack>
@@ -613,7 +814,7 @@ export function StepRecording() {
                   borderRadius: 1,
                   px: 1,
                   py: 1.2,
-                  bgcolor: 'rgba(77, 201, 162, 0.22)',
+                  bgcolor: 'action.hover',
                 }}
               >
                 <Box
@@ -640,7 +841,7 @@ export function StepRecording() {
                       width: previewDurationSeconds > 0
                         ? `${(previewCurrentSeconds / previewDurationSeconds) * 100}%`
                         : 0,
-                      bgcolor: 'rgba(47, 224, 182, 0.12)',
+                      bgcolor: 'action.selected',
                       pointerEvents: 'none',
                     }}
                   />
@@ -653,7 +854,7 @@ export function StepRecording() {
                         flexShrink: 0,
                         height,
                         borderRadius: 99,
-                        bgcolor: '#2FE0B6',
+                        bgcolor: 'success.light',
                         opacity:
                           previewDurationSeconds > 0 &&
                           index / waveformBars.length <
@@ -667,10 +868,10 @@ export function StepRecording() {
               </Box>
 
               <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="caption" sx={{ color: '#3fe6c4' }}>
+                <Typography variant="caption" sx={{ color: 'success.light' }}>
                   {formatAudioDuration(previewCurrentSeconds)}
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#3fe6c4' }}>
+                <Typography variant="caption" sx={{ color: 'success.light' }}>
                   {formatAudioDuration(previewDurationSeconds)}
                 </Typography>
               </Stack>
@@ -683,9 +884,18 @@ export function StepRecording() {
                   sx={{
                     borderRadius: 999,
                     minWidth: 72,
-                    bgcolor: '#0b4f43',
-                    color: '#ffffff',
-                    '&:hover': { bgcolor: '#0b4f43' },
+                    bgcolor: 'success.dark',
+                    color: 'common.white',
+                    transition: 'transform 120ms ease, box-shadow 120ms ease, filter 120ms ease',
+                    '&:hover': {
+                      bgcolor: 'success.dark',
+                      boxShadow: (theme) => theme.shadows[6],
+                      filter: 'brightness(1.04)',
+                    },
+                    '&:active': {
+                      transform: 'translateY(1px) scale(0.98)',
+                      boxShadow: (theme) => theme.shadows[2],
+                    },
                   }}
                 >
                   {isPreviewPlaying ? t('recording.recorderPanel.pausePreview') : '▶'}
@@ -698,9 +908,17 @@ export function StepRecording() {
                   sx={{
                     borderRadius: 999,
                     px: 3,
-                    borderColor: '#f4f6fb',
-                    color: isAudioSaved ? '#0f1f63' : '#f4f6fb',
-                    bgcolor: isAudioSaved ? '#f4f6fb' : 'transparent',
+                    borderColor: 'common.white',
+                    color: isAudioSaved ? 'primary.dark' : 'common.white',
+                    bgcolor: isAudioSaved ? 'common.white' : 'transparent',
+                    transition: 'transform 120ms ease, background-color 120ms ease, border-color 120ms ease',
+                    '&:hover': {
+                      borderColor: 'common.white',
+                      bgcolor: isAudioSaved ? 'common.white' : 'action.hover',
+                    },
+                    '&:active': {
+                      transform: 'translateY(1px) scale(0.98)',
+                    },
                   }}
                 >
                   {isAudioSaved
@@ -733,7 +951,7 @@ export function StepRecording() {
           ) : (
             <Stack spacing={4} sx={{ alignItems: 'center', justifyContent: 'center' }}>
               <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-                <Typography sx={{ color: 'rgba(228, 255, 246, 0.78)', fontSize: '1rem' }}>
+                <Typography sx={{ color: 'common.white', opacity: 0.78, fontSize: '1rem' }}>
                   {t('recording.recorderPanel.idleHint')}
                 </Typography>
                 <Tooltip
@@ -747,8 +965,16 @@ export function StepRecording() {
                       sx={{
                         borderRadius: 999,
                         px: 2,
-                        borderColor: 'rgba(185, 255, 234, 0.65)',
-                        color: '#e8fff8',
+                        borderColor: 'divider',
+                        color: 'common.white',
+                        transition: 'transform 120ms ease, background-color 120ms ease, border-color 120ms ease',
+                        '&:hover': {
+                          borderColor: 'common.white',
+                          bgcolor: 'action.hover',
+                        },
+                        '&:active': {
+                          transform: 'translateY(1px) scale(0.98)',
+                        },
                       }}
                     >
                       {t('recording.actions.upload')}
@@ -772,10 +998,23 @@ export function StepRecording() {
                       width: 50,
                       height: 50,
                       borderRadius: '50%',
-                      bgcolor: '#0b584a',
-                      color: '#ff1f57',
+                      bgcolor: 'success.dark',
+                      color: 'error.main',
                       fontSize: '1.4rem',
-                      '&:hover': { bgcolor: '#0b584a' },
+                      transition: 'transform 120ms ease, box-shadow 120ms ease, filter 120ms ease',
+                      '&:hover': {
+                        bgcolor: 'success.dark',
+                        boxShadow: (theme) => theme.shadows[8],
+                        filter: 'brightness(1.06)',
+                      },
+                      '&:active': {
+                        transform: 'translateY(1px) scale(0.96)',
+                        boxShadow: (theme) => theme.shadows[3],
+                      },
+                      '&:focus-visible': {
+                        outline: (theme) => `2px solid ${theme.palette.primary.light}`,
+                        outlineOffset: 2,
+                      },
                     }}
                   >
                     ●
@@ -806,7 +1045,7 @@ export function StepRecording() {
           </Typography>
         </Alert>
 
-        {largeUpload.state.status !== 'idle' ? (
+        {['uploading', 'paused', 'error'].includes(largeUpload.state.status) ? (
           <Alert severity={largeUpload.state.status === 'error' ? 'error' : 'info'}>
             <Stack spacing={1}>
               <Typography variant="body2">

@@ -129,10 +129,6 @@ export function StepTopics() {
   return (
     <UISectionCard title={t('topics.title')} subheader={t('topics.subheader')}>
       <Stack spacing={2} data-testid="step-topics">
-        <Typography color="text.secondary">
-          {t('topics.description')} <code>useAudioTranscriber</code>.
-        </Typography>
-
         {!audioDataUrl && !audioStorageKey ? (
           <Alert
             severity="warning"

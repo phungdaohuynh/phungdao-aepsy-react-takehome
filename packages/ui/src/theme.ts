@@ -8,6 +8,11 @@ export const appTheme = createTheme({
       light: '#2f9e7a',
       dark: '#15503e',
     },
+    recording: {
+      main: '#2f9e7a',
+      light: '#7fd8bf',
+      dark: '#1f6f56',
+    },
     secondary: {
       main: '#7b5bb7',
       light: '#a086d1',
@@ -46,26 +51,26 @@ export const appTheme = createTheme({
     },
     MuiLink: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           fontWeight: 600,
-          color: '#15503e',
-        },
+          color: theme.palette.primary.dark,
+        }),
       },
     },
     MuiAlert: {
       styleOverrides: {
-        root: {
-          color: '#18181b',
-        },
-        message: {
-          color: '#18181b',
-        },
-        action: {
+        root: ({ theme }) => ({
+          color: theme.palette.text.primary,
+        }),
+        message: ({ theme }) => ({
+          color: theme.palette.text.primary,
+        }),
+        action: ({ theme }) => ({
           '& .MuiButton-root': {
-            color: '#18181b',
+            color: theme.palette.text.primary,
             fontWeight: 700,
           },
-        },
+        }),
       },
     },
     MuiChip: {

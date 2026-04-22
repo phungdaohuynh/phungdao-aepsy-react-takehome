@@ -168,7 +168,7 @@ test('refresh keeps progress on step 3', async ({ page }) => {
   await expect(page.getByText('Step 3 - Psychologist Search')).toBeVisible();
 });
 
-test('upload audio file and restore draft banner', async ({ page }) => {
+test('upload audio file and restore step after refresh', async ({ page }) => {
   await mockGraphql(page);
   await page.goto('/');
   await expect(page.getByTestId('step-recording')).toBeVisible();
@@ -180,7 +180,6 @@ test('upload audio file and restore draft banner', async ({ page }) => {
 
   await page.reload();
 
-  await expect(page.getByTestId('resume-draft-banner')).toBeVisible();
   await expect(page.getByTestId('step-shell-topics')).toBeVisible();
 });
 
@@ -235,4 +234,29 @@ test('indexeddb unavailable shows storage error without crashing', async ({ page
     page.getByText('Local audio storage is unavailable in this environment.').first(),
   ).toBeVisible();
   await expect(page.getByTestId('step-recording')).toBeVisible();
+});
+
+test('compare panel supports close, reopen, and remove item', async ({ page }) => {
+  await mockGraphql(page);
+  await page.goto('/');
+  await attachAudioFile(page);
+  await page.getByTestId('record-continue-button').click();
+
+  await expect(page.getByTestId('step-topics')).toBeVisible();
+  await page.getByTestId('topic-chip-U_DIS_STRESS').click();
+  await page.getByTestId('topics-continue-button').click();
+
+  await expect(page.getByTestId('step-psychologists')).toBeVisible();
+  await page.getByTestId('provider-card-provider-1').getByRole('button', { name: 'Compare' }).click();
+
+  await expect(page.getByText('Compare psychologists')).toBeVisible();
+  await page.getByTestId('psychologists-compare-panel').getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByText('Compare psychologists')).not.toBeVisible();
+
+  await page.getByTestId('psychologists-compare-floating-button').click();
+  await expect(page.getByText('Compare psychologists')).toBeVisible();
+
+  await page.getByTestId('psychologists-compare-remove-provider-1').click();
+  await expect(page.getByText('Compare psychologists')).not.toBeVisible();
+  await expect(page.getByTestId('psychologists-compare-floating-button')).not.toBeVisible();
 });

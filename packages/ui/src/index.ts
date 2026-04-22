@@ -1,3 +1,5 @@
+import './mui-theme-augmentation';
+
 export {
   Alert,
   Avatar,

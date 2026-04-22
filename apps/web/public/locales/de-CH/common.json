@@ -41,7 +41,7 @@
     "title": "Schritt 1 - Sprachnotiz",
     "subheader": "Nimm eine Sprachnotiz auf oder lade eine vorhandene Audiodatei hoch",
     "description": "Der Recorder behandelt verweigerte Berechtigungen, Tab-Unterbrechungen und erneute Aufnahmen stabil.",
-    "uploadPolicy": "Kleine Dateien werden bis {{smallMb}} MB direkt verarbeitet. Größere Dateien laufen lokal im Worker bis {{largeMb}} MB.",
+    "uploadPolicy": "Kleine Dateien werden bis {{smallMb}} MB direkt verarbeitet. Größere Dateien werden im Browser bis {{largeMb}} MB verarbeitet.",
     "interrupted": "Die Aufnahme wurde unterbrochen. Bitte prüfe sie und nimm bei Bedarf erneut auf.",
     "notSavedUntilStopped": "Die Aufnahme wird erst gespeichert, wenn du auf Stop klickst.",
     "largeUploadInterruptedAfterRefresh": "Die Verarbeitung großer Dateien wurde durch ein Neuladen unterbrochen. Bitte lade die Datei erneut hoch.",
@@ -126,7 +126,7 @@
       "tooLargeForLongUpload": "Datei zu groß. Maximal unterstützt sind 1 GB.",
       "cleared": "Vorheriges Audio gelöscht. Du kannst erneut aufnehmen.",
       "audioDeleted": "Gespeichertes Audio wurde gelöscht.",
-      "longUploadStarted": "Große Datei erkannt. Worker-Verarbeitung wird gestartet...",
+      "longUploadStarted": "Große Datei erkannt. Verarbeitung wird gestartet...",
       "longUploadSuccess": "Verarbeitung großer Datei erfolgreich abgeschlossen.",
       "longUploadFailed": "Verarbeitung großer Datei fehlgeschlagen. Bitte erneut versuchen oder kleinere Datei nutzen.",
       "saved": "Audiodatei heruntergeladen."
@@ -172,7 +172,7 @@
   },
   "psychologists": {
     "title": "Schritt 3 - Psychologinnen-Suche",
-    "subheader": "Endpoint: {{endpoint}} • Ausgewählte Themen: {{count}}",
+    "subheader": "Ausgewählte Themen: {{count}}",
     "loading": "Passende Psychologinnen werden gesucht...",
     "error": "Psychologinnen konnten nicht geladen werden. Bitte prüfe den GraphQL-Endpunkt und die ausgewählten Themen.",
     "emptyTitle": "Keine Psychologinnen gefunden",
@@ -208,7 +208,10 @@
       "description": "Vergleiche ausgewählte Anbieterinnen nebeneinander.",
       "empty": "Noch keine Psychologinnen zum Vergleichen ausgewählt.",
       "close": "Schließen",
-      "clear": "Auswahl löschen"
+      "clear": "Auswahl löschen",
+      "remove": "Entfernen",
+      "reasons": "Gründe",
+      "tags": "Tags"
     },
     "toast": {
       "maxCompare": "Du kannst maximal 3 Psychologinnen vergleichen.",
@@ -223,7 +226,7 @@
     },
     "tooltips": {
       "selectForCompare": "Mindestens eine Psychologin zum Vergleichen auswählen.",
-      "openCompare": "Vergleichsansicht mit ausgewählten Psychologinnen öffnen.",
+      "openCompare": "Vergleichspanel mit ausgewählten Psychologinnen anzeigen.",
       "addToCompare": "Diese Psychologin zur Vergleichsliste hinzufügen.",
       "removeFromCompare": "Diese Psychologin aus der Vergleichsliste entfernen.",
       "requestSession": "Mock-Aktion zur Simulation einer Buchungsanfrage.",

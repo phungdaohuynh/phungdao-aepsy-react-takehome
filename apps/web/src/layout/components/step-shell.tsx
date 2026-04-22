@@ -9,7 +9,6 @@ import { ASSIGNMENT_STEPS } from '@/shared/constants/steps';
 import { StepRecording } from '@/features/recording/components/step-recording';
 import { useAppStore } from '@/shared/state/store';
 import { NetworkStatusBanner } from '@/layout/components/network-status-banner';
-import { ResumeDraftBanner } from '@/layout/components/resume-draft-banner';
 
 const StepTopicsLazy = dynamic(
   () =>
@@ -70,10 +69,7 @@ export function StepShell() {
           {t('heroTitle')}
         </Typography>
 
-        <Stack spacing={1}>
-          <NetworkStatusBanner />
-          <ResumeDraftBanner />
-        </Stack>
+        <NetworkStatusBanner />
 
         <UIStepProgress
           steps={ASSIGNMENT_STEPS.map((item) => ({
